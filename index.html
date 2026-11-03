@@ -1,0 +1,2084 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NOVA — Sistem Stok Obat Asrama</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f4f6f8;
+        color: #1e293b;
+      }
+
+      /* Animasi Ilustrasi Medis Bergerak */
+      @keyframes floatSlow {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-10px) rotate(3deg);
+        }
+      }
+      @keyframes floatReverse {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(8px) rotate(-4deg);
+        }
+      }
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          opacity: 0.75;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.06);
+        }
+      }
+      @keyframes ecgWave {
+        0% {
+          stroke-dashoffset: 600;
+        }
+        100% {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      .animate-float-slow {
+        animation: floatSlow 4.5s ease-in-out infinite;
+      }
+      .animate-float-reverse {
+        animation: floatReverse 5s ease-in-out infinite;
+      }
+      .animate-pulse-glow {
+        animation: pulseGlow 3s ease-in-out infinite;
+      }
+      .ecg-line {
+        stroke-dasharray: 600;
+        stroke-dashoffset: 600;
+        animation: ecgWave 3.5s linear infinite;
+      }
+
+      /* Custom Scrollbar untuk Tabel & Navigasi */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #e2e8f0;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col justify-between">
+    <!-- ================= HEADER & HERO SECTION (SESUAI SKETSA) ================= -->
+    <header
+      class="bg-[#d8dde3] border-b border-slate-300/80 relative overflow-hidden"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-8 md:py-10 relative z-10"
+      >
+        <!-- Baris Atas: Brand Badge, Panduan Deploy, dan Tombol LOGIN di Pojok Kanan Atas -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-xl bg-[#2c88b5] flex items-center justify-center text-white font-extrabold text-xl shadow-md"
+            >
+              +
+            </div>
+            <div>
+              <span
+                class="text-xs font-bold uppercase tracking-wider text-[#2c88b5] block"
+                >Layanan Kesehatan Asrama</span
+              >
+              <h1
+                class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight"
+              >
+                NOVA MedStock
+              </h1>
+            </div>
+          </div>
+
+          <!-- Grup Tombol Kanan Atas -->
+          <div class="flex items-center gap-2.5 sm:gap-3 ml-auto">
+            <button
+              onclick="openGuideModal()"
+              class="px-3.5 py-2.5 rounded-full bg-white/90 hover:bg-white text-slate-700 font-semibold text-xs sm:text-sm shadow-sm border border-slate-300 transition flex items-center gap-1.5"
+            >
+              <svg
+                class="w-4 h-4 text-[#2c88b5]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span>Review Alur & Cara Deploy</span>
+            </button>
+
+            <!-- Status Mode Badge -->
+            <div
+              id="roleBadge"
+              class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-200/90 text-slate-700 text-xs font-semibold"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-slate-500"
+                id="roleDot"
+              ></span>
+              <span id="roleText">Mode Pengunjung</span>
+            </div>
+
+            <!-- Tombol LOGIN / LOGOUT -->
+            <button
+              id="authBtn"
+              onclick="handleAuthClick()"
+              class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-[#456997] hover:bg-[#36557d] active:scale-95 text-white font-bold text-sm sm:text-base tracking-wide shadow-md transition-all flex items-center gap-2"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                ></path>
+              </svg>
+              <span id="authBtnText">LOGIN</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Area Banner Utama: Judul & Ilustrasi Bergerak Medis -->
+        <div
+          class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white/60 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-white/80 shadow-sm"
+        >
+          <!-- Kolom Kiri: Teks & Ringkasan Gedung -->
+          <div class="lg:col-span-7 space-y-4 text-left">
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2c88b5]/15 text-[#1e6b91] text-xs font-bold"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-[#2c88b5] animate-ping"
+              ></span>
+              MONITORING REAL-TIME P3K ASRAMA
+            </div>
+            <h2
+              class="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight"
+            >
+              NOVA — Stok Obat Asrama
+            </h2>
+            <p
+              class="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl"
+            >
+              Cek ketersediaan obat pertolongan pertama, kegunaan medis, dan
+              jumlah stok di setiap gedung asrama secara cepat. Pengurus
+              kesehatan (Admin Utama & Pengurus Gedung) dapat melakukan login
+              untuk memperbarui atau menambah obat baru.
+            </p>
+
+            <!-- Ringkasan Cepat Stok Gedung Aktif -->
+            <div class="grid grid-cols-3 gap-3 pt-2 max-w-lg">
+              <div
+                class="bg-white/90 rounded-2xl p-3 border border-slate-200/80 shadow-sm"
+              >
+                <span class="text-xs text-slate-500 font-medium block"
+                  >Gedung Aktif</span
+                >
+                <span
+                  id="statBuildingName"
+                  class="text-sm sm:text-base font-extrabold text-[#2c88b5] truncate block mt-0.5"
+                  >GEDUNG A1</span
+                >
+              </div>
+              <div
+                class="bg-white/90 rounded-2xl p-3 border border-slate-200/80 shadow-sm"
+              >
+                <span class="text-xs text-slate-500 font-medium block"
+                  >Jenis Obat</span
+                >
+                <span
+                  id="statTotalItems"
+                  class="text-sm sm:text-base font-extrabold text-slate-800 block mt-0.5"
+                  >0 Obat</span
+                >
+              </div>
+              <div
+                class="bg-white/90 rounded-2xl p-3 border border-slate-200/80 shadow-sm"
+              >
+                <span class="text-xs text-slate-500 font-medium block"
+                  >Perlu Restock</span
+                >
+                <span
+                  id="statLowStock"
+                  class="text-sm sm:text-base font-extrabold text-amber-600 block mt-0.5"
+                  >0 Item</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Kolom Kanan: Ilustrasi Bergerak Medis -->
+          <div class="lg:col-span-5 flex justify-center items-center">
+            <div
+              class="relative w-full max-w-md h-52 sm:h-60 bg-gradient-to-br from-[#2c88b5]/15 via-white/80 to-[#456997]/20 rounded-2xl border border-white shadow-inner flex items-center justify-center overflow-hidden p-4"
+            >
+              <svg
+                class="w-full h-32 text-[#2c88b5]"
+                viewBox="0 0 500 140"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <line
+                  x1="0"
+                  y1="35"
+                  x2="500"
+                  y2="35"
+                  stroke="#cbd5e1"
+                  stroke-dasharray="4 4"
+                  stroke-width="1"
+                />
+                <line
+                  x1="0"
+                  y1="70"
+                  x2="500"
+                  y2="70"
+                  stroke="#cbd5e1"
+                  stroke-dasharray="4 4"
+                  stroke-width="1"
+                />
+                <line
+                  x1="0"
+                  y1="105"
+                  x2="500"
+                  y2="105"
+                  stroke="#cbd5e1"
+                  stroke-dasharray="4 4"
+                  stroke-width="1"
+                />
+                <path
+                  class="ecg-line"
+                  d="M 0 70 L 110 70 L 130 50 L 145 85 L 165 15 L 185 125 L 205 55 L 220 70 L 310 70 L 330 48 L 345 82 L 365 20 L 385 120 L 405 58 L 420 70 L 500 70"
+                  stroke="currentColor"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <div
+                class="absolute top-4 left-5 bg-white p-3 rounded-2xl shadow-md border border-slate-100 animate-float-slow flex items-center gap-2"
+              >
+                <div
+                  class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-lg"
+                >
+                  +
+                </div>
+                <div class="pr-1">
+                  <div class="text-[11px] font-bold text-slate-700">
+                    Kotak P3K
+                  </div>
+                  <div class="text-[10px] text-emerald-600 font-semibold">
+                    Siaga 24 Jam
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="absolute bottom-4 left-7 bg-white/95 px-3 py-2 rounded-2xl shadow-md border border-slate-100 animate-float-reverse flex items-center gap-2"
+              >
+                <svg class="w-7 h-7" viewBox="0 0 36 36" fill="none">
+                  <rect
+                    x="6"
+                    y="12"
+                    width="24"
+                    height="12"
+                    rx="6"
+                    transform="rotate(-30 18 18)"
+                    fill="#ef4444"
+                  />
+                  <path
+                    d="M18 10.5 L25.5 6.2 A6 6 0 0 1 31.5 16.5 L24 20.8 Z"
+                    fill="#fbbf24"
+                  />
+                </svg>
+                <span class="text-xs font-bold text-slate-700"
+                  >Obat & Vitamin</span
+                >
+              </div>
+
+              <div
+                class="absolute right-6 top-5 bg-[#456997] text-white p-3 rounded-2xl shadow-lg animate-pulse-glow flex items-center gap-2"
+              >
+                <svg
+                  class="w-6 h-6 text-sky-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="text-[11px] font-bold leading-none">9 Gedung</div>
+                  <div class="text-[10px] text-sky-200 mt-0.5">
+                    Terintegrasi
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="absolute bottom-3 right-5 text-[11px] font-semibold text-slate-500 bg-white/80 px-2.5 py-1 rounded-full border border-slate-200"
+              >
+                ⚡ Ilustrasi Medis Interaktif
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main
+      class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+    >
+      <div
+        id="toastContainer"
+        class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+      ></div>
+
+      <!-- 2. NAVIGASI PILIH GEDUNG -->
+      <section aria-label="Pilih Gedung Asrama" class="mb-6">
+        <div class="flex items-center justify-between mb-2.5 px-1">
+          <span
+            class="text-xs font-bold uppercase tracking-wider text-slate-500"
+            >Pilih Gedung Asrama:</span
+          >
+          <span class="text-xs text-slate-500 hidden sm:inline"
+            >Klik tombol gedung untuk menampilkan stok obatnya</span
+          >
+        </div>
+        <div
+          id="buildingTabs"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2.5"
+        ></div>
+      </section>
+
+      <!-- 3. AREA KONTEN & TABEL STOK OBAT -->
+      <section
+        class="bg-[#dcdcdc] rounded-[28px] sm:rounded-[36px] p-4 sm:p-7 md:p-8 shadow-sm border border-slate-300/80"
+      >
+        <div
+          class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-400/30"
+        >
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h3
+                id="currentBuildingTitle"
+                class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight"
+              >
+                STOK OBAT — GEDUNG A1
+              </h3>
+              <span
+                id="adminModeIndicator"
+                class="hidden px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-sm"
+              >
+                Mode Edit Aktif
+              </span>
+            </div>
+            <p
+              id="buildingSubtitle"
+              class="text-xs sm:text-sm text-slate-600 mt-1"
+            >
+              Menampilkan daftar obat P3K beserta kegunaan dan ketersediaan stok
+              terkini.
+            </p>
+          </div>
+
+          <!-- Kontrol Pencarian, Filter Status, dan Tombol Admin -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+              <svg
+                class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              <input
+                type="text"
+                id="searchInput"
+                oninput="renderMedicineTable()"
+                placeholder="Cari nama obat / keluhan..."
+                class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white text-slate-800 placeholder-slate-400 text-sm font-medium border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+              />
+            </div>
+
+            <select
+              id="statusFilter"
+              onchange="renderMedicineTable()"
+              class="px-3.5 py-2.5 rounded-xl bg-white text-slate-700 text-sm font-semibold border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="AVAILABLE">Tersedia (&gt;5)</option>
+              <option value="LOW">Stok Menipis (1-5)</option>
+              <option value="EMPTY">Habis (0)</option>
+            </select>
+
+            <!-- Tombol + Obat Baru (MUNCUL JIKA PUNYA AKSES DI GEDUNG AKTIF) -->
+            <button
+              id="addMedicineBtn"
+              onclick="openAddModal()"
+              class="hidden px-4 py-2.5 rounded-xl bg-[#2c88b5] hover:bg-[#236e94] active:scale-95 text-white font-bold text-sm shadow-sm transition flex items-center gap-1.5"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M12 4v16m8-8H4"
+                ></path>
+              </svg>
+              <span>+ Obat Baru</span>
+            </button>
+
+            <!-- Tombol Reset Data Demo (KHUSUS 2 ADMIN UTAMA) -->
+            <button
+              id="resetDataBtn"
+              onclick="openResetModal()"
+              title="Kembalikan semua stok ke data awal demo"
+              class="hidden px-3.5 py-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-700 font-semibold text-xs sm:text-sm border border-slate-300 transition items-center gap-1.5"
+            >
+              <svg
+                class="w-4 h-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
+              <span>Reset Data Database</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabel Stok Obat -->
+        <div
+          class="bg-white/95 rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="border-b-2 border-slate-200 bg-slate-100/90 text-slate-800"
+                >
+                  <th
+                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase w-1/3"
+                  >
+                    DAFTAR OBAT
+                  </th>
+                  <th
+                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase w-5/12"
+                  >
+                    KEGUNAAN
+                  </th>
+                  <th
+                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase text-center"
+                  >
+                    STOK
+                  </th>
+                  <th
+                    id="actionHeader"
+                    class="hidden py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase text-center"
+                  >
+                    AKSI PENGURUS
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="medicineTableBody"
+                class="divide-y divide-slate-200 text-sm sm:text-base"
+              ></tbody>
+            </table>
+          </div>
+
+          <div id="emptyState" class="hidden py-12 px-4 text-center">
+            <div
+              class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-slate-700 font-bold text-base">
+              Data obat tidak ditemukan
+            </p>
+            <p class="text-slate-500 text-xs sm:text-sm mt-1">
+              Coba gunakan kata kunci pencarian lain atau ubah filter status
+              stok.
+            </p>
+          </div>
+        </div>
+
+        <!-- Baris Info Bawah Container -->
+        <div
+          class="mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-600 px-1"
+        >
+          <div class="flex flex-wrap items-center gap-4">
+            <span class="font-bold text-slate-700">Keterangan Indikator:</span>
+            <span class="inline-flex items-center gap-1.5"
+              ><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              Tersedia (&gt; 5)</span
+            >
+            <span class="inline-flex items-center gap-1.5"
+              ><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              Menipis (1 - 5)</span
+            >
+            <span class="inline-flex items-center gap-1.5"
+              ><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Habis
+              (0)</span
+            >
+          </div>
+          <div id="lastUpdatedInfo" class="font-medium text-slate-600">
+            Terhubung ke Database Supabase (medicine_stocks)
+          </div>
+        </div>
+      </section>
+
+      <!-- Log Aktivitas Singkat -->
+      <section
+        class="mt-6 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <svg
+              class="w-4 h-4 text-[#2c88b5]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <h4
+              class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700"
+            >
+              Riwayat Perubahan Stok Terkini
+            </h4>
+          </div>
+          <button
+            onclick="clearHistoryLog()"
+            class="text-xs text-slate-400 hover:text-slate-600 font-medium"
+          >
+            Bersihkan Riwayat
+          </button>
+        </div>
+        <div
+          id="activityLogList"
+          class="text-xs text-slate-600 space-y-1.5 max-h-28 overflow-y-auto"
+        ></div>
+      </section>
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="bg-white border-t border-slate-200 mt-10 py-5">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500"
+      >
+        <p class="font-semibold text-slate-700">
+          NOVA — Sistem Informasi Stok Obat Gedung Asrama
+        </p>
+        <p>
+          Klik tombol <strong>LOGIN</strong> di kanan atas untuk masuk sebagai
+          Admin Utama (2 akun) atau Pengurus Gedung (9 akun).
+        </p>
+      </div>
+    </footer>
+
+    <!-- ================= 4. MODAL LOGIN ADMIN (11 AKUN) ================= -->
+    <div
+      id="loginModal"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div
+              class="w-9 h-9 rounded-xl bg-[#456997] text-white flex items-center justify-center font-bold"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                ></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900">
+                Login Pengurus / Admin
+              </h3>
+              <p class="text-xs text-slate-500">
+                2 Akun Admin Utama & 9 Akun Pengurus Gedung
+              </p>
+            </div>
+          </div>
+          <button
+            onclick="closeLoginModal()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Daftar Pilihan Cepat 11 Akun -->
+        <div
+          class="bg-sky-50 border border-sky-200 rounded-2xl p-3.5 mb-5 text-xs text-sky-900 space-y-2.5"
+        >
+          <div class="font-bold uppercase tracking-wider text-sky-800">
+            Klik Akun untuk Isi Otomatis:
+          </div>
+
+          <div>
+            <span class="text-[11px] font-semibold text-slate-600 block mb-1"
+              >A. 2 Akun Kontrol Penuh (Semua 9 Gedung):</span
+            >
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onclick="fillAccount('admin_utama1', 'pusat123')"
+                class="px-2.5 py-1 rounded-lg bg-[#456997] text-white font-bold hover:bg-[#36557d] transition"
+              >
+                Admin Utama 1 (admin_utama1)
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_utama2', 'pusat123')"
+                class="px-2.5 py-1 rounded-lg bg-[#456997] text-white font-bold hover:bg-[#36557d] transition"
+              >
+                Admin Utama 2 (admin_utama2)
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[11px] font-semibold text-slate-600 block mb-1"
+              >B. 9 Akun Pengurus Gedung (Hanya Gedung Sendiri):</span
+            >
+            <div class="grid grid-cols-3 gap-1.5">
+              <button
+                type="button"
+                onclick="fillAccount('admin_a1', 'gedunga1')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung A1
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_a2', 'gedunga2')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung A2
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_a3', 'gedunga3')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung A3
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_a4', 'gedunga4')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung A4
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_a5', 'gedunga5')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung A5
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_c1', 'gedungc1')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung C1
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_c3', 'gedungc3')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Gedung C3
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_sylva1', 'sylva1')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                SylvaEdu 1
+              </button>
+              <button
+                type="button"
+                onclick="fillAccount('admin_sylva2', 'sylva2')"
+                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                SylvaEdu 2
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pesan Error Validasi Login -->
+        <div
+          id="loginErrorBox"
+          class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold"
+        >
+          Username atau password tidak sesuai! Silakan pilih salah satu dari 11
+          akun di atas.
+        </div>
+
+        <form onsubmit="submitLogin(event)" class="space-y-4">
+          <div>
+            <label
+              class="block text-xs font-bold uppercase text-slate-600 mb-1.5"
+              for="usernameInput"
+              >Username</label
+            >
+            <input
+              id="usernameInput"
+              type="text"
+              required
+              placeholder="Contoh: admin_utama1 atau admin_a1"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#456997]"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-xs font-bold uppercase text-slate-600 mb-1.5"
+              for="passwordInput"
+              >Password</label
+            >
+            <input
+              id="passwordInput"
+              type="password"
+              required
+              placeholder="Masukkan password"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#456997]"
+            />
+          </div>
+          <div class="flex items-center justify-end gap-2.5 pt-2">
+            <button
+              type="button"
+              onclick="closeLoginModal()"
+              class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-6 py-2.5 rounded-xl bg-[#456997] hover:bg-[#36557d] text-white font-bold text-sm shadow-md"
+            >
+              Masuk Sekarang
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= MODAL TAMBAH OBAT BARU ================= -->
+    <div
+      id="addMedicineModal"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200"
+      >
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900">
+              Tambah Obat Baru
+            </h3>
+            <p id="addModalSubtitle" class="text-xs text-slate-500">
+              Menambahkan data obat ke GEDUNG A1
+            </p>
+          </div>
+          <button
+            onclick="closeAddModal()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <form onsubmit="submitNewMedicine(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label
+                class="block text-xs font-bold uppercase text-slate-600 mb-1"
+                >Nama Obat *</label
+              >
+              <input
+                id="medNameInput"
+                type="text"
+                required
+                placeholder="Contoh: Paracetamol 500mg"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold uppercase text-slate-600 mb-1"
+                >Bentuk / Kategori</label
+              >
+              <select
+                id="medCategoryInput"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+              >
+                <option value="Tablet / Kaplet">Tablet / Kaplet</option>
+                <option value="Kapsul">Kapsul</option>
+                <option value="Sirup / Cair">Sirup / Cair</option>
+                <option value="Salep / Obat Luar">Salep / Obat Luar</option>
+                <option value="P3K / Alat Medis">P3K / Alat Medis</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1"
+              >Kegunaan / Indikasi Medis *</label
+            >
+            <textarea
+              id="medUsageInput"
+              rows="2"
+              required
+              placeholder="Contoh: Meredakan demam, sakit kepala, dan nyeri ringan."
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-bold uppercase text-slate-600 mb-1"
+                >Stok Awal *</label
+              >
+              <input
+                id="medStockInput"
+                type="number"
+                min="0"
+                value="10"
+                required
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold uppercase text-slate-600 mb-1"
+                >Satuan *</label
+              >
+              <select
+                id="medUnitInput"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+              >
+                <option value="Strip">Strip</option>
+                <option value="Botol">Botol</option>
+                <option value="Tube">Tube</option>
+                <option value="Kotak / Box">Kotak / Box</option>
+                <option value="Pcs / Roll">Pcs / Roll</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Hanya muncul untuk 2 Admin Utama -->
+          <div id="applyAllWrapper" class="pt-1">
+            <label
+              class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer"
+            >
+              <input
+                id="applyAllBuildings"
+                type="checkbox"
+                class="rounded text-[#2c88b5] focus:ring-[#2c88b5] w-4 h-4"
+              />
+              <span>Tambahkan juga obat ini ke seluruh 9 gedung asrama</span>
+            </label>
+          </div>
+
+          <div
+            class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200"
+          >
+            <button
+              type="button"
+              onclick="closeAddModal()"
+              class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-[#2c88b5] hover:bg-[#236e94] text-white font-bold text-sm shadow-md"
+            >
+              Simpan Obat
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= MODAL KONFIRMASI HAPUS / RESET ================= -->
+    <div
+      id="confirmModal"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200"
+      >
+        <h3
+          id="confirmModalTitle"
+          class="text-lg font-extrabold text-slate-900 mb-2"
+        >
+          Konfirmasi Tindakan
+        </h3>
+        <p id="confirmModalDesc" class="text-sm text-slate-600 mb-6">
+          Apakah Anda yakin ingin melanjutkan?
+        </p>
+        <div class="flex items-center justify-end gap-2.5">
+          <button
+            onclick="closeConfirmModal()"
+            class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100"
+          >
+            Batal
+          </button>
+          <button
+            id="confirmModalActionBtn"
+            class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm"
+          >
+            Ya, Lanjutkan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL EVALUASI SKETSA & PANDUAN DEPLOY DATABASE ================= -->
+    <div
+      id="guideModal"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden"
+      >
+        <div
+          class="px-6 py-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between"
+        >
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
+              Evaluasi Diagram Alur & Panduan Deploy Database
+            </h3>
+            <p class="text-xs text-slate-500">
+              Koreksi arsitektur berdasarkan sketsa Anda & langkah menuju server
+              produksi
+            </p>
+          </div>
+          <button
+            onclick="closeGuideModal()"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div
+          class="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 leading-relaxed"
+        >
+          <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <h4 class="font-extrabold text-amber-900 text-base mb-2">
+              1. Koreksi & Penyempurnaan Diagram Alur (Flowchart)
+            </h4>
+            <ul
+              class="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-amber-950"
+            >
+              <li>
+                <strong>Relasi Gedung dengan Tambah/Kurangi Obat:</strong> Pada
+                flowchart awal, jalur
+                <em>"Menambah/Mengurangi Obat"</em> terpisah dari
+                <em>"Pilih Gedung"</em>. Pada kode ini, alurnya disempurnakan
+                menjadi:
+                <strong
+                  >Pilih Gedung &rarr; Lihat Stok Gedung &rarr; Jika Login Admin
+                  Memiliki Hak Akses di Gedung Tersebut, lakukan Tambah/Kurang
+                  Stok atau Tambah Obat Baru &rarr; Simpan ke Database
+                  Supabase</strong
+                >.
+              </li>
+              <li>
+                <strong>Pembagian Hak Akses 11 Akun:</strong> 2 Akun Admin Utama
+                dapat mengelola seluruh 9 gedung, sedangkan 9 Akun Pengurus
+                Gedung hanya dapat mengelola dan menambah obat baru di gedungnya
+                masing-masing.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="px-6 py-3.5 bg-slate-100 border-t border-slate-200 flex justify-end"
+        >
+          <button
+            onclick="closeGuideModal()"
+            class="px-5 py-2 rounded-xl bg-[#456997] text-white font-bold text-xs sm:text-sm"
+          >
+            Mengerti, Tutup Panduan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+      const SUPABASE_URL = "https://qdcsbtjjoholqucaqpos.supabase.co";
+      const SUPABASE_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkY3NidGpqb2hvbHF1Y2FxcG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTk5NjYsImV4cCI6MjEwOTE5NTk2Nn0.kgolAM-7NW6Zvf-QhCpx4CAPVIKzVtoR9yCU53wenvQ";
+      const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // Daftar 9 Gedung Asrama
+      const BUILDINGS = [
+        { id: "GEDUNG A1", label: "GEDUNG A1" },
+        { id: "GEDUNG A2", label: "GEDUNG A2" },
+        { id: "GEDUNG A3", label: "GEDUNG A3" },
+        { id: "GEDUNG A4", label: "GEDUNG A4" },
+        { id: "GEDUNG A5", label: "GEDUNG A5" },
+        { id: "GEDUNG C1", label: "GEDUNG C1" },
+        { id: "GEDUNG C3", label: "GEDUNG C3" },
+        { id: "GEDUNG SYLVAEDU1", label: "GEDUNG SYLVAEDU1" },
+        { id: "GEDUNG SYLVAEDU2", label: "GEDUNG SYLVAEDU2" },
+      ];
+
+      // Daftar 11 Akun (2 Admin Utama + 9 Pengurus Gedung)
+      const ACCOUNTS = [
+        {
+          username: "admin_utama1",
+          password: "pusat123",
+          role: "superadmin",
+          building: "ALL",
+          label: "Admin Utama 1",
+        },
+        {
+          username: "admin_utama2",
+          password: "pusat123",
+          role: "superadmin",
+          building: "ALL",
+          label: "Admin Utama 2",
+        },
+        {
+          username: "admin_a1",
+          password: "gedunga1",
+          role: "building_admin",
+          building: "GEDUNG A1",
+          label: "Pengurus Gedung A1",
+        },
+        {
+          username: "admin_a2",
+          password: "gedunga2",
+          role: "building_admin",
+          building: "GEDUNG A2",
+          label: "Pengurus Gedung A2",
+        },
+        {
+          username: "admin_a3",
+          password: "gedunga3",
+          role: "building_admin",
+          building: "GEDUNG A3",
+          label: "Pengurus Gedung A3",
+        },
+        {
+          username: "admin_a4",
+          password: "gedunga4",
+          role: "building_admin",
+          building: "GEDUNG A4",
+          label: "Pengurus Gedung A4",
+        },
+        {
+          username: "admin_a5",
+          password: "gedunga5",
+          role: "building_admin",
+          building: "GEDUNG A5",
+          label: "Pengurus Gedung A5",
+        },
+        {
+          username: "admin_c1",
+          password: "gedungc1",
+          role: "building_admin",
+          building: "GEDUNG C1",
+          label: "Pengurus Gedung C1",
+        },
+        {
+          username: "admin_c3",
+          password: "gedungc3",
+          role: "building_admin",
+          building: "GEDUNG C3",
+          label: "Pengurus Gedung C3",
+        },
+        {
+          username: "admin_sylva1",
+          password: "sylva1",
+          role: "building_admin",
+          building: "GEDUNG SYLVAEDU1",
+          label: "Pengurus SylvaEdu 1",
+        },
+        {
+          username: "admin_sylva2",
+          password: "sylva2",
+          role: "building_admin",
+          building: "GEDUNG SYLVAEDU2",
+          label: "Pengurus SylvaEdu 2",
+        },
+      ];
+
+      const LOG_STORAGE_KEY = "NOVA_ASRAMA_LOGS_V1";
+
+      // State Aplikasi
+      let selectedBuilding = "GEDUNG A1";
+      let currentUser = null; // Menyimpan objek akun yang sedang login
+      let inventoryData = {};
+      let activityLogs = [];
+      let pendingConfirmCallback = null;
+
+      // Cek apakah akun yang sedang login berhak mengelola gedung tertentu
+      function canManageBuilding(buildingId) {
+        if (!currentUser) return false;
+        if (currentUser.role === "superadmin") return true;
+        return currentUser.building === buildingId;
+      }
+
+      // Data Awal (Default Seed) untuk Setiap Gedung Asrama
+      function generateDefaultInventory() {
+        const baseTemplates = [
+          {
+            name: "Paracetamol 500mg",
+            category: "Tablet / Kaplet",
+            usage:
+              "Meredakan demam, sakit kepala, dan nyeri ringan hingga sedang.",
+            unit: "Strip",
+            baseStock: 14,
+          },
+          {
+            name: "Promag / Antasida Doen",
+            category: "Tablet / Kaplet",
+            usage:
+              "Mengatasi gejala sakit maag, asam lambung naik, dan perut kembung.",
+            unit: "Strip",
+            baseStock: 10,
+          },
+          {
+            name: "Diapet / Entrostop",
+            category: "Kapsul",
+            usage:
+              "Pertolongan pertama untuk mengurangi frekuensi buang air besar (diare).",
+            unit: "Strip",
+            baseStock: 8,
+          },
+          {
+            name: "OBH Combi / Obat Batuk",
+            category: "Sirup / Cair",
+            usage:
+              "Meredakan batuk berdahak yang disertai gejala flu dan tenggorokan gatal.",
+            unit: "Botol",
+            baseStock: 4,
+          },
+          {
+            name: "Betadine Antiseptik 30ml",
+            category: "Salep / Obat Luar",
+            usage:
+              "Cairan antiseptik untuk membersihkan luka lecet atau luka jatuh agar tidak infeksi.",
+            unit: "Botol",
+            baseStock: 6,
+          },
+          {
+            name: "Hansaplast Plester Luka",
+            category: "P3K / Alat Medis",
+            usage:
+              "Menutup dan melindungi luka kecil dari kotoran dan bakteri.",
+            unit: "Kotak / Box",
+            baseStock: 3,
+          },
+          {
+            name: "Minyak Kayu Putih 60ml",
+            category: "Salep / Obat Luar",
+            usage:
+              "Menghangatkan tubuh, meredakan masuk angin, perut kembung, dan gatal gigitan serangga.",
+            unit: "Botol",
+            baseStock: 5,
+          },
+          {
+            name: "CTM (Chlorpheniramine)",
+            category: "Tablet / Kaplet",
+            usage:
+              "Meredakan gejala alergi seperti bersin-bersin, gatal-gatal, atau biduran.",
+            unit: "Strip",
+            baseStock: 0,
+          },
+          {
+            name: "Oralit Sachet 200ml",
+            category: "Sirup / Cair",
+            usage: "Mencegah dan mengatasi dehidrasi akibat diare atau muntah.",
+            unit: "Pcs / Roll",
+            baseStock: 12,
+          },
+        ];
+
+        const initialData = {};
+        BUILDINGS.forEach((b, bIdx) => {
+          initialData[b.id] = baseTemplates.map((item, idx) => {
+            let variedStock = item.baseStock + ((bIdx + idx) % 5) - 2;
+            if (idx === 7 && bIdx % 2 === 0) variedStock = 0;
+            if (variedStock < 0) variedStock = 0;
+            return {
+              id: `${b.id.replace(/\s+/g, "_")}_MED_${idx + 1}`,
+              name: item.name,
+              category: item.category,
+              usage: item.usage,
+              stock: variedStock,
+              unit: item.unit,
+            };
+          });
+        });
+        return initialData;
+      }
+
+      // Mengambil data stok obat dari Supabase
+      async function loadData() {
+        BUILDINGS.forEach((b) => {
+          inventoryData[b.id] = [];
+        });
+
+        try {
+          const { data, error } = await db
+            .from("medicine_stocks")
+            .select("*")
+            .order("id", { ascending: true });
+
+          if (error) {
+            console.error("Gagal mengambil data dari Supabase:", error.message);
+            showToast(
+              "Gagal memuat database Supabase, menampilkan data lokal sementara.",
+              "error",
+            );
+            inventoryData = generateDefaultInventory();
+          } else if (data && data.length === 0) {
+            // Jika tabel Supabase masih kosong (0 baris), isi otomatis dengan data awal
+            const defaultData = generateDefaultInventory();
+            const seedRows = [];
+            Object.keys(defaultData).forEach((bId) => {
+              defaultData[bId].forEach((item) => {
+                seedRows.push({
+                  building_id: bId,
+                  name: item.name,
+                  category: item.category,
+                  usage: item.usage,
+                  stock: item.stock,
+                  unit: item.unit,
+                });
+              });
+            });
+
+            const { data: inserted, error: seedErr } = await db
+              .from("medicine_stocks")
+              .insert(seedRows)
+              .select();
+
+            if (!seedErr && inserted) {
+              inserted.forEach((item) => {
+                if (!inventoryData[item.building_id])
+                  inventoryData[item.building_id] = [];
+                inventoryData[item.building_id].push(item);
+              });
+            } else {
+              inventoryData = defaultData;
+            }
+          } else if (data) {
+            data.forEach((item) => {
+              if (!inventoryData[item.building_id])
+                inventoryData[item.building_id] = [];
+              inventoryData[item.building_id].push(item);
+            });
+          }
+        } catch (err) {
+          console.error("Koneksi Supabase bermasalah:", err);
+          inventoryData = generateDefaultInventory();
+        }
+
+        // Muat log riwayat dari localStorage
+        try {
+          const savedLogs = localStorage.getItem(LOG_STORAGE_KEY);
+          if (savedLogs) {
+            activityLogs = JSON.parse(savedLogs);
+          } else {
+            activityLogs = [
+              {
+                time: getCurrentTimeStr(),
+                text: "Sistem NOVA siap digunakan. Data 9 gedung berhasil dimuat.",
+              },
+            ];
+            saveLogs();
+          }
+        } catch (err) {
+          console.error("Gagal memuat log:", err);
+        }
+
+        updateAuthUI();
+        renderBuildingTabs();
+        renderMedicineTable();
+        updateSummaryStats();
+        renderActivityLogs();
+      }
+
+      function saveLogs() {
+        try {
+          localStorage.setItem(
+            LOG_STORAGE_KEY,
+            JSON.stringify(activityLogs.slice(0, 25)),
+          );
+        } catch (err) {
+          console.error("Gagal menyimpan log:", err);
+        }
+      }
+
+      function getCurrentTimeStr() {
+        const now = new Date();
+        return now.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function addActivityLog(message) {
+        activityLogs.unshift({
+          time: getCurrentTimeStr(),
+          text: message,
+        });
+        if (activityLogs.length > 25) activityLogs.pop();
+        saveLogs();
+        renderActivityLogs();
+      }
+
+      function clearHistoryLog() {
+        activityLogs = [
+          { time: getCurrentTimeStr(), text: "Riwayat aktivitas dibersihkan." },
+        ];
+        saveLogs();
+        renderActivityLogs();
+      }
+
+      function renderActivityLogs() {
+        const container = document.getElementById("activityLogList");
+        if (!container) return;
+        container.innerHTML = activityLogs
+          .map(
+            (log) => `
+                <div class="flex items-start gap-2 py-1 border-b border-slate-100 last:border-none">
+                    <span class="font-mono text-[11px] text-slate-400 shrink-0">[${log.time}]</span>
+                    <span class="text-slate-700">${escapeHtml(log.text)}</span>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      // Render Deretan Tombol Gedung
+      function renderBuildingTabs() {
+        const container = document.getElementById("buildingTabs");
+        container.innerHTML = BUILDINGS.map((b) => {
+          const isActive = b.id === selectedBuilding;
+          const buildingItems = inventoryData[b.id] || [];
+          const emptyCount = buildingItems.filter((m) => m.stock === 0).length;
+          const hasAccess = canManageBuilding(b.id);
+
+          return `
+                    <button
+                        onclick="selectBuilding('${b.id}')"
+                        class="relative px-3 py-3 rounded-2xl font-extrabold text-xs sm:text-[13px] tracking-wide transition-all duration-200 flex flex-col items-center justify-center text-center min-h-[54px] select-none ${
+                          isActive
+                            ? "bg-[#1a668d] text-white shadow-lg ring-2 ring-offset-2 ring-[#2c88b5] -translate-y-0.5"
+                            : "bg-[#2c88b5] hover:bg-[#23749c] text-white/95 shadow-sm hover:shadow"
+                        }"
+                    >
+                        <span class="leading-tight">${b.label}</span>
+                        ${
+                          hasAccess
+                            ? `<span class="mt-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-400 text-slate-900">Akses Edit</span>`
+                            : emptyCount > 0
+                              ? `<span class="mt-1 px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${isActive ? "bg-amber-300 text-slate-900" : "bg-black/20 text-white"}">${emptyCount} Habis</span>`
+                              : ""
+                        }
+                    </button>
+                `;
+        }).join("");
+      }
+
+      function selectBuilding(buildingId) {
+        selectedBuilding = buildingId;
+        updateAuthUI();
+        renderBuildingTabs();
+        renderMedicineTable();
+        updateSummaryStats();
+      }
+
+      // Update Ringkasan Statistik di Hero Banner
+      function updateSummaryStats() {
+        const items = inventoryData[selectedBuilding] || [];
+        const lowOrEmpty = items.filter((i) => i.stock <= 5).length;
+
+        document.getElementById("statBuildingName").textContent =
+          selectedBuilding;
+        document.getElementById("statTotalItems").textContent =
+          `${items.length} Jenis Obat`;
+        document.getElementById("statLowStock").textContent =
+          `${lowOrEmpty} Item`;
+        document.getElementById("currentBuildingTitle").textContent =
+          `STOK OBAT — ${selectedBuilding}`;
+        document.getElementById("addModalSubtitle").textContent =
+          `Menambahkan data obat ke ${selectedBuilding}`;
+      }
+
+      // Render Tabel Stok Obat
+      function renderMedicineTable() {
+        const tbody = document.getElementById("medicineTableBody");
+        const emptyState = document.getElementById("emptyState");
+        const actionHeader = document.getElementById("actionHeader");
+        const searchQuery = (document.getElementById("searchInput").value || "")
+          .trim()
+          .toLowerCase();
+        const statusFilter = document.getElementById("statusFilter").value;
+
+        const canEditThisBuilding = canManageBuilding(selectedBuilding);
+
+        if (canEditThisBuilding) {
+          actionHeader.classList.remove("hidden");
+        } else {
+          actionHeader.classList.add("hidden");
+        }
+
+        const rawList = inventoryData[selectedBuilding] || [];
+        const filtered = rawList.filter((item) => {
+          const matchSearch =
+            item.name.toLowerCase().includes(searchQuery) ||
+            item.usage.toLowerCase().includes(searchQuery) ||
+            item.category.toLowerCase().includes(searchQuery);
+          if (!matchSearch) return false;
+
+          if (statusFilter === "AVAILABLE") return item.stock > 5;
+          if (statusFilter === "LOW") return item.stock >= 1 && item.stock <= 5;
+          if (statusFilter === "EMPTY") return item.stock === 0;
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = "";
+          emptyState.classList.remove("hidden");
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+
+        tbody.innerHTML = filtered
+          .map((item) => {
+            let badgeHtml = "";
+            if (item.stock === 0) {
+              badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">Habis</span>`;
+            } else if (item.stock <= 5) {
+              badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">Menipis</span>`;
+            } else {
+              badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Tersedia</span>`;
+            }
+
+            const isZero = item.stock <= 0;
+            const adminControlsHtml = canEditThisBuilding
+              ? `
+                    <td class="py-4 px-5 text-center align-middle">
+                        <div class="inline-flex items-center justify-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                            <button
+                                onclick="adjustStock('${item.id}', -1)"
+                                ${isZero ? "disabled" : ""}
+                                title="${isZero ? "Stok sudah 0 (tidak bisa dikurangi)" : "Kurangi 1 stok"}"
+                                class="w-8 h-8 rounded-lg font-extrabold text-sm flex items-center justify-center transition ${
+                                  isZero
+                                    ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                    : "bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-700 border border-slate-300 shadow-2xs active:scale-95"
+                                }"
+                            >
+                                -1
+                            </button>
+                            <button
+                                onclick="adjustStock('${item.id}', 1)"
+                                title="Tambah 1 stok"
+                                class="w-8 h-8 rounded-lg bg-[#2c88b5] hover:bg-[#226b8f] text-white font-extrabold text-sm flex items-center justify-center shadow-2xs active:scale-95 transition"
+                            >
+                                +1
+                            </button>
+                            <button
+                                onclick="confirmDeleteMedicine('${item.id}', '${escapeHtml(item.name)}')"
+                                title="Hapus obat dari gedung ini"
+                                class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center border border-rose-200 transition active:scale-95 ml-1"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                `
+              : "";
+
+            return `
+                    <tr class="hover:bg-slate-50/90 transition">
+                        <td class="py-4 px-5 align-middle">
+                            <div class="font-bold text-slate-900 text-sm sm:text-base">${escapeHtml(item.name)}</div>
+                            <span class="inline-block mt-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                ${escapeHtml(item.category)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-5 align-middle text-slate-700 text-xs sm:text-sm leading-relaxed">
+                            ${escapeHtml(item.usage)}
+                        </td>
+                        <td class="py-4 px-5 align-middle text-center">
+                            <div class="flex flex-col items-center justify-center gap-1">
+                                <div class="text-base sm:text-lg font-extrabold ${item.stock === 0 ? "text-rose-600" : "text-slate-900"}">
+                                    ${item.stock} <span class="text-xs font-semibold text-slate-500">${escapeHtml(item.unit)}</span>
+                                </div>
+                                ${badgeHtml}
+                            </div>
+                        </td>
+                        ${adminControlsHtml}
+                    </tr>
+                `;
+          })
+          .join("");
+      }
+
+      // Fungsi Menambah / Mengurangi Stok Obat
+      async function adjustStock(medId, delta) {
+        if (!canManageBuilding(selectedBuilding)) {
+          showToast(
+            "Anda tidak memiliki izin untuk mengubah stok di gedung ini.",
+            "error",
+          );
+          return;
+        }
+
+        const list = inventoryData[selectedBuilding] || [];
+        const target = list.find((m) => String(m.id) === String(medId));
+        if (!target) return;
+
+        if (target.stock + delta < 0) {
+          showToast(
+            `Stok ${target.name} sudah 0 dan tidak dapat dikurangi lagi.`,
+            "error",
+          );
+          return;
+        }
+
+        const newStock = target.stock + delta;
+        const { error } = await db
+          .from("medicine_stocks")
+          .update({ stock: newStock })
+          .eq("id", target.id);
+
+        if (error) {
+          showToast("Gagal memperbarui stok ke database.", "error");
+          return;
+        }
+
+        target.stock = newStock;
+        renderMedicineTable();
+        renderBuildingTabs();
+        updateSummaryStats();
+
+        const actionWord =
+          delta > 0 ? `ditambah (+${delta})` : `dikurangi (${delta})`;
+        addActivityLog(
+          `[${selectedBuilding}] Stok "${target.name}" ${actionWord} menjadi ${target.stock} ${target.unit} oleh ${currentUser.label}.`,
+        );
+        showToast(
+          `Stok ${target.name} diperbarui menjadi ${target.stock} ${target.unit}`,
+          "success",
+        );
+      }
+
+      // Fungsi Hapus Obat dengan Modal Konfirmasi
+      function confirmDeleteMedicine(medId, medName) {
+        if (!canManageBuilding(selectedBuilding)) return;
+        openConfirmModal(
+          "Hapus Obat dari Gedung",
+          `Apakah Anda yakin ingin menghapus "${medName}" dari daftar stok ${selectedBuilding}?`,
+          async () => {
+            const { error } = await db
+              .from("medicine_stocks")
+              .delete()
+              .eq("id", medId);
+
+            if (error) {
+              showToast("Gagal menghapus obat dari database.", "error");
+              return;
+            }
+
+            inventoryData[selectedBuilding] = (
+              inventoryData[selectedBuilding] || []
+            ).filter((m) => String(m.id) !== String(medId));
+
+            renderMedicineTable();
+            renderBuildingTabs();
+            updateSummaryStats();
+            addActivityLog(
+              `[${selectedBuilding}] Obat "${medName}" dihapus oleh ${currentUser.label}.`,
+            );
+            showToast(`Obat "${medName}" berhasil dihapus.`, "info");
+          },
+        );
+      }
+
+      // Fungsi Tambah Obat Baru (Diizinkan untuk Admin Utama & Pengurus Gedung di Gedung Sendiri)
+      function openAddModal() {
+        if (!canManageBuilding(selectedBuilding)) return;
+        document.getElementById("medNameInput").value = "";
+        document.getElementById("medUsageInput").value = "";
+        document.getElementById("medStockInput").value = "10";
+        document.getElementById("applyAllBuildings").checked = false;
+
+        // Sembunyikan opsi "Tambahkan ke seluruh 9 gedung" jika bukan Superadmin
+        const applyAllWrapper = document.getElementById("applyAllWrapper");
+        if (currentUser && currentUser.role === "superadmin") {
+          applyAllWrapper.classList.remove("hidden");
+        } else {
+          applyAllWrapper.classList.add("hidden");
+        }
+
+        const modal = document.getElementById("addMedicineModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.getElementById("medNameInput").focus();
+      }
+
+      function closeAddModal() {
+        const modal = document.getElementById("addMedicineModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      async function submitNewMedicine(event) {
+        event.preventDefault();
+        if (!canManageBuilding(selectedBuilding)) return;
+
+        const name = document.getElementById("medNameInput").value.trim();
+        const category = document.getElementById("medCategoryInput").value;
+        const usage = document.getElementById("medUsageInput").value.trim();
+        const stock = Math.max(
+          0,
+          parseInt(document.getElementById("medStockInput").value, 10) || 0,
+        );
+        const unit = document.getElementById("medUnitInput").value;
+        const applyAll =
+          currentUser.role === "superadmin" &&
+          document.getElementById("applyAllBuildings").checked;
+
+        if (!name || !usage) {
+          showToast("Mohon lengkapi nama obat dan kegunaannya.", "error");
+          return;
+        }
+
+        const targetBuildings = applyAll
+          ? BUILDINGS.map((b) => b.id)
+          : [selectedBuilding];
+
+        const newRows = targetBuildings.map((bId) => ({
+          building_id: bId,
+          name,
+          category,
+          usage,
+          stock,
+          unit,
+        }));
+
+        const { data, error } = await db
+          .from("medicine_stocks")
+          .insert(newRows)
+          .select();
+
+        if (error) {
+          showToast("Gagal menambahkan obat ke database.", "error");
+          return;
+        }
+
+        data.forEach((row) => {
+          if (!inventoryData[row.building_id])
+            inventoryData[row.building_id] = [];
+          inventoryData[row.building_id].push(row);
+        });
+
+        closeAddModal();
+        renderMedicineTable();
+        renderBuildingTabs();
+        updateSummaryStats();
+
+        const scopeText = applyAll ? "seluruh 9 gedung" : selectedBuilding;
+        addActivityLog(
+          `Obat baru "${name}" (${stock} ${unit}) ditambahkan ke ${scopeText} oleh ${currentUser.label}.`,
+        );
+        showToast(
+          `Obat "${name}" berhasil ditambahkan ke ${scopeText}!`,
+          "success",
+        );
+      }
+
+      // ================= SISTEM AUTENTIKASI 11 AKUN =================
+      function handleAuthClick() {
+        if (currentUser) {
+          const prevLabel = currentUser.label;
+          currentUser = null;
+          updateAuthUI();
+          renderBuildingTabs();
+          renderMedicineTable();
+          addActivityLog(`${prevLabel} keluar (Logout).`);
+          showToast("Anda telah keluar dari sesi pengurus.", "info");
+        } else {
+          openLoginModal();
+        }
+      }
+
+      function openLoginModal() {
+        document.getElementById("loginErrorBox").classList.add("hidden");
+        document.getElementById("usernameInput").value = "";
+        document.getElementById("passwordInput").value = "";
+        const modal = document.getElementById("loginModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.getElementById("usernameInput").focus();
+      }
+
+      function closeLoginModal() {
+        const modal = document.getElementById("loginModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      function fillAccount(user, pass) {
+        document.getElementById("usernameInput").value = user;
+        document.getElementById("passwordInput").value = pass;
+        document.getElementById("loginErrorBox").classList.add("hidden");
+      }
+
+      function submitLogin(event) {
+        event.preventDefault();
+        const user = document.getElementById("usernameInput").value.trim();
+        const pass = document.getElementById("passwordInput").value.trim();
+
+        const matchedAccount = ACCOUNTS.find(
+          (acc) => acc.username === user && acc.password === pass,
+        );
+
+        if (matchedAccount) {
+          currentUser = matchedAccount;
+          // Jika yang login adalah pengurus gedung, langsung arahkan ke tab gedungnya
+          if (currentUser.role === "building_admin") {
+            selectedBuilding = currentUser.building;
+          }
+          closeLoginModal();
+          updateAuthUI();
+          renderBuildingTabs();
+          renderMedicineTable();
+          updateSummaryStats();
+          addActivityLog(`Login berhasil sebagai ${currentUser.label}.`);
+          showToast(`Selamat datang, ${currentUser.label}!`, "success");
+        } else {
+          document.getElementById("loginErrorBox").classList.remove("hidden");
+        }
+      }
+
+      function updateAuthUI() {
+        const authBtn = document.getElementById("authBtn");
+        const authBtnText = document.getElementById("authBtnText");
+        const addMedicineBtn = document.getElementById("addMedicineBtn");
+        const resetDataBtn = document.getElementById("resetDataBtn");
+        const adminModeIndicator =
+          document.getElementById("adminModeIndicator");
+        const roleDot = document.getElementById("roleDot");
+        const roleText = document.getElementById("roleText");
+
+        const canEditActive = canManageBuilding(selectedBuilding);
+
+        if (currentUser) {
+          authBtnText.textContent = `LOGOUT (${currentUser.username})`;
+          authBtn.className =
+            "px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-sm sm:text-base tracking-wide shadow-md transition-all flex items-center gap-2";
+          roleDot.className =
+            "w-2 h-2 rounded-full bg-emerald-500 animate-ping";
+          roleText.textContent = currentUser.label;
+
+          // Tombol Reset Database hanya untuk 2 Admin Utama
+          if (currentUser.role === "superadmin") {
+            resetDataBtn.classList.remove("hidden");
+            resetDataBtn.classList.add("flex");
+          } else {
+            resetDataBtn.classList.add("hidden");
+            resetDataBtn.classList.remove("flex");
+          }
+
+          // Tombol + Obat Baru dan Indikator Edit mengikuti hak akses gedung yang sedang dibuka
+          if (canEditActive) {
+            addMedicineBtn.classList.remove("hidden");
+            addMedicineBtn.classList.add("flex");
+            adminModeIndicator.classList.remove("hidden");
+            adminModeIndicator.textContent = `Mode Edit Aktif (${currentUser.label})`;
+            adminModeIndicator.className =
+              "px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-sm";
+          } else {
+            addMedicineBtn.classList.add("hidden");
+            addMedicineBtn.classList.remove("flex");
+            adminModeIndicator.classList.remove("hidden");
+            adminModeIndicator.textContent = `Hanya Lihat (Akses Anda khusus ${currentUser.building})`;
+            adminModeIndicator.className =
+              "px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold shadow-sm";
+          }
+        } else {
+          authBtnText.textContent = "LOGIN";
+          authBtn.className =
+            "px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-[#456997] hover:bg-[#36557d] active:scale-95 text-white font-bold text-sm sm:text-base tracking-wide shadow-md transition-all flex items-center gap-2";
+          addMedicineBtn.classList.add("hidden");
+          addMedicineBtn.classList.remove("flex");
+          resetDataBtn.classList.add("hidden");
+          resetDataBtn.classList.remove("flex");
+          adminModeIndicator.classList.add("hidden");
+          roleDot.className = "w-2 h-2 rounded-full bg-slate-500";
+          roleText.textContent = "Mode Pengunjung";
+        }
+      }
+
+      // ================= RESET DATA DEMO & MODAL KONFIRMASI =================
+      function openResetModal() {
+        if (!currentUser || currentUser.role !== "superadmin") return;
+        openConfirmModal(
+          "Reset Data Stok ke Awal",
+          "Seluruh perubahan stok obat di 9 gedung asrama pada database Supabase akan dikembalikan ke data awal. Lanjutkan?",
+          async () => {
+            const defaultData = generateDefaultInventory();
+            const allRows = [];
+            Object.keys(defaultData).forEach((bId) => {
+              defaultData[bId].forEach((item) => {
+                allRows.push({
+                  building_id: bId,
+                  name: item.name,
+                  category: item.category,
+                  usage: item.usage,
+                  stock: item.stock,
+                  unit: item.unit,
+                });
+              });
+            });
+
+            await db.from("medicine_stocks").delete().neq("id", 0);
+            const { error } = await db
+              .from("medicine_stocks")
+              .insert(allRows)
+              .select();
+
+            if (error) {
+              showToast("Gagal mereset database.", "error");
+              return;
+            }
+            await loadData();
+            addActivityLog(
+              `Seluruh data stok 9 gedung di-reset oleh ${currentUser.label}.`,
+            );
+            showToast("Database berhasil di-reset ke kondisi awal.", "info");
+          },
+        );
+      }
+
+      function openConfirmModal(title, desc, onConfirm) {
+        document.getElementById("confirmModalTitle").textContent = title;
+        document.getElementById("confirmModalDesc").textContent = desc;
+        pendingConfirmCallback = onConfirm;
+        const modal = document.getElementById("confirmModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function closeConfirmModal() {
+        const modal = document.getElementById("confirmModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        pendingConfirmCallback = null;
+      }
+
+      document
+        .getElementById("confirmModalActionBtn")
+        .addEventListener("click", () => {
+          if (typeof pendingConfirmCallback === "function") {
+            pendingConfirmCallback();
+          }
+          closeConfirmModal();
+        });
+
+      function openGuideModal() {
+        const modal = document.getElementById("guideModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function closeGuideModal() {
+        const modal = document.getElementById("guideModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+
+        let bgClass = "bg-slate-800 text-white border-slate-700";
+        if (type === "success")
+          bgClass = "bg-emerald-700 text-white border-emerald-600";
+        if (type === "error")
+          bgClass = "bg-rose-700 text-white border-rose-600";
+
+        toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-lg border text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 transition-all duration-300 ${bgClass}`;
+        toast.innerHTML = `
+                <span>${escapeHtml(message)}</span>
+                <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white font-bold">&times;</button>
+            `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          if (toast.parentElement) toast.remove();
+        }, 3200);
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Jalankan Aplikasi saat halaman selesai dimuat
+      window.onload = function () {
+        loadData();
+      };
+    </script>
+  </body>
+</html>
