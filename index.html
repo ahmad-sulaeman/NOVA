@@ -94,14 +94,14 @@
     </style>
   </head>
   <body class="min-h-screen flex flex-col justify-between">
-    <!-- ================= HEADER & HERO SECTION (SESUAI SKETSA) ================= -->
+    <!-- ================= HEADER & HERO SECTION ================= -->
     <header
       class="bg-[#d8dde3] border-b border-slate-300/80 relative overflow-hidden"
     >
       <div
         class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-8 md:py-10 relative z-10"
       >
-        <!-- Baris Atas: Brand Badge, Panduan Deploy, dan Tombol LOGIN di Pojok Kanan Atas -->
+        <!-- Baris Atas: Brand Badge dan Tombol LOGIN di Pojok Kanan Atas -->
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div class="flex items-center gap-3">
             <div
@@ -124,26 +124,6 @@
 
           <!-- Grup Tombol Kanan Atas -->
           <div class="flex items-center gap-2.5 sm:gap-3 ml-auto">
-            <button
-              onclick="openGuideModal()"
-              class="px-3.5 py-2.5 rounded-full bg-white/90 hover:bg-white text-slate-700 font-semibold text-xs sm:text-sm shadow-sm border border-slate-300 transition flex items-center gap-1.5"
-            >
-              <svg
-                class="w-4 h-4 text-[#2c88b5]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <span>Review Alur & Cara Deploy</span>
-            </button>
-
             <!-- Status Mode Badge -->
             <div
               id="roleBadge"
@@ -202,10 +182,9 @@
             <p
               class="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl"
             >
-              Cek ketersediaan obat pertolongan pertama, kegunaan medis, dan
-              jumlah stok di setiap gedung asrama secara cepat. Pengurus
-              kesehatan (Admin Utama & Pengurus Gedung) dapat melakukan login
-              untuk memperbarui atau menambah obat baru.
+              Cek ketersediaan obat pertolongan pertama, dosis rekomendasi,
+              indikasi medis, dan jumlah stok di setiap gedung asrama secara
+              cepat. Klik pada nama obat untuk melihat deskripsi lengkapnya.
             </p>
 
             <!-- Ringkasan Cepat Stok Gedung Aktif -->
@@ -365,7 +344,7 @@
               <div
                 class="absolute bottom-3 right-5 text-[11px] font-semibold text-slate-500 bg-white/80 px-2.5 py-1 rounded-full border border-slate-200"
               >
-                ⚡ Ilustrasi Medis Interaktif
+                NOVA v1.0.0
               </div>
             </div>
           </div>
@@ -425,8 +404,8 @@
               id="buildingSubtitle"
               class="text-xs sm:text-sm text-slate-600 mt-1"
             >
-              Menampilkan daftar obat P3K beserta kegunaan dan ketersediaan stok
-              terkini.
+              Klik pada <strong>nama obat</strong> untuk melihat dosis
+              rekomendasi, indikasi, dan deskripsi lengkapnya.
             </p>
           </div>
 
@@ -513,7 +492,7 @@
           </div>
         </div>
 
-        <!-- Tabel Stok Obat -->
+        <!-- Tabel Stok Obat (Hanya Kolom Daftar Obat & Stok) -->
         <div
           class="bg-white/95 rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden"
         >
@@ -524,17 +503,12 @@
                   class="border-b-2 border-slate-200 bg-slate-100/90 text-slate-800"
                 >
                   <th
-                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase w-1/3"
+                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase w-2/3"
                   >
                     DAFTAR OBAT
                   </th>
                   <th
-                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase w-5/12"
-                  >
-                    KEGUNAAN
-                  </th>
-                  <th
-                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase text-center"
+                    class="py-4 px-5 text-sm sm:text-base font-extrabold tracking-wide uppercase text-center w-1/3"
                   >
                     STOK
                   </th>
@@ -600,9 +574,7 @@
               (0)</span
             >
           </div>
-          <div id="lastUpdatedInfo" class="font-medium text-slate-600">
-            Terhubung ke Database Supabase (medicine_stocks)
-          </div>
+          <div id="lastUpdatedInfo" class="font-medium text-slate-600"></div>
         </div>
       </section>
 
@@ -655,20 +627,135 @@
         </p>
         <p>
           Klik tombol <strong>LOGIN</strong> di kanan atas untuk masuk sebagai
-          Admin Utama (2 akun) atau Pengurus Gedung (9 akun).
+          Admin Utama atau Pengurus Gedung.
         </p>
       </div>
     </footer>
 
-    <!-- ================= 4. MODAL LOGIN ADMIN (11 AKUN) ================= -->
+    <!-- ================= MODAL DETAIL DESKRIPSI OBAT ================= -->
+    <div
+      id="medicineDetailModal"
+      onclick="if (event.target === this) closeMedicineDetailModal();"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div
+          class="flex items-start justify-between gap-3 pb-4 border-b border-slate-200"
+        >
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span
+                id="detailMedCategory"
+                class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#2c88b5]/15 text-[#1e6b91]"
+              >
+                Tablet / Kaplet
+              </span>
+              <span id="detailMedStockBadge"></span>
+            </div>
+            <h3
+              id="detailMedName"
+              class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2"
+            >
+              Nama Obat
+            </h3>
+            <p id="detailMedBuilding" class="text-xs text-slate-500 mt-0.5">
+              Lokasi: GEDUNG A1
+            </p>
+          </div>
+          <button
+            onclick="closeMedicineDetailModal()"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4 my-5 text-sm">
+          <!-- Indikasi & Kegunaan -->
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+            <h4
+              class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5"
+            >
+              Indikasi & Kegunaan Medis
+            </h4>
+            <p
+              id="detailMedUsage"
+              class="text-slate-800 leading-relaxed font-medium"
+            ></p>
+          </div>
+
+          <!-- Dosis Rekomendasi & Aturan Pakai -->
+          <div class="bg-sky-50/70 rounded-2xl p-4 border border-sky-200/80">
+            <h4
+              class="text-xs font-extrabold uppercase tracking-wider text-sky-800 mb-1.5"
+            >
+              Dosis Rekomendasi & Aturan Pakai
+            </h4>
+            <p
+              id="detailMedDosage"
+              class="text-slate-800 leading-relaxed font-medium"
+            ></p>
+          </div>
+
+          <!-- Efek Samping / Perhatian -->
+          <div
+            class="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/80"
+          >
+            <h4
+              class="text-xs font-extrabold uppercase tracking-wider text-amber-800 mb-1.5"
+            >
+              Perhatian & Efek Samping Singkat
+            </h4>
+            <p
+              id="detailMedWarning"
+              class="text-slate-700 text-xs sm:text-sm leading-relaxed"
+            ></p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-between pt-3 border-t border-slate-200"
+        >
+          <div class="text-xs text-slate-500">
+            Stok saat ini:
+            <strong id="detailMedStockCount" class="text-slate-800"
+              >0 Strip</strong
+            >
+          </div>
+          <button
+            type="button"
+            onclick="closeMedicineDetailModal()"
+            class="px-5 py-2.5 rounded-xl bg-[#2c88b5] hover:bg-[#236e94] text-white font-bold text-sm shadow-sm transition"
+          >
+            Tutup Detail
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 4. MODAL LOGIN ADMIN ================= -->
     <div
       id="loginModal"
       class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
     >
       <div
-        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200"
       >
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-5">
           <div class="flex items-center gap-2.5">
             <div
               class="w-9 h-9 rounded-xl bg-[#456997] text-white flex items-center justify-center font-bold"
@@ -692,7 +779,7 @@
                 Login Pengurus / Admin
               </h3>
               <p class="text-xs text-slate-500">
-                2 Akun Admin Utama & 9 Akun Pengurus Gedung
+                Masukkan kredensial akun pengurus asrama
               </p>
             </div>
           </div>
@@ -716,115 +803,12 @@
           </button>
         </div>
 
-        <!-- Daftar Pilihan Cepat 11 Akun -->
-        <div
-          class="bg-sky-50 border border-sky-200 rounded-2xl p-3.5 mb-5 text-xs text-sky-900 space-y-2.5"
-        >
-          <div class="font-bold uppercase tracking-wider text-sky-800">
-            Klik Akun untuk Isi Otomatis:
-          </div>
-
-          <div>
-            <span class="text-[11px] font-semibold text-slate-600 block mb-1"
-              >A. 2 Akun Kontrol Penuh (Semua 9 Gedung):</span
-            >
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onclick="fillAccount('admin_utama1', 'pusat123')"
-                class="px-2.5 py-1 rounded-lg bg-[#456997] text-white font-bold hover:bg-[#36557d] transition"
-              >
-                Admin Utama 1 (admin_utama1)
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_utama2', 'pusat123')"
-                class="px-2.5 py-1 rounded-lg bg-[#456997] text-white font-bold hover:bg-[#36557d] transition"
-              >
-                Admin Utama 2 (admin_utama2)
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <span class="text-[11px] font-semibold text-slate-600 block mb-1"
-              >B. 9 Akun Pengurus Gedung (Hanya Gedung Sendiri):</span
-            >
-            <div class="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onclick="fillAccount('admin_a1', 'gedunga1')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung A1
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_a2', 'gedunga2')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung A2
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_a3', 'gedunga3')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung A3
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_a4', 'gedunga4')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung A4
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_a5', 'gedunga5')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung A5
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_c1', 'gedungc1')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung C1
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_c3', 'gedungc3')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Gedung C3
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_sylva1', 'sylva1')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                SylvaEdu 1
-              </button>
-              <button
-                type="button"
-                onclick="fillAccount('admin_sylva2', 'sylva2')"
-                class="px-2 py-1 rounded-lg bg-white border border-sky-300 font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                SylvaEdu 2
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Pesan Error Validasi Login -->
         <div
           id="loginErrorBox"
           class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold"
         >
-          Username atau password tidak sesuai! Silakan pilih salah satu dari 11
-          akun di atas.
+          Username atau password tidak sesuai!
         </div>
 
         <form onsubmit="submitLogin(event)" class="space-y-4">
@@ -838,7 +822,7 @@
               id="usernameInput"
               type="text"
               required
-              placeholder="Contoh: admin_utama1 atau admin_a1"
+              placeholder="Masukkan username"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#456997]"
             />
           </div>
@@ -881,7 +865,7 @@
       class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
     >
       <div
-        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200"
+        class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
       >
         <div class="flex items-center justify-between mb-5">
           <div>
@@ -956,6 +940,18 @@
               placeholder="Contoh: Meredakan demam, sakit kepala, dan nyeri ringan."
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
             ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1"
+              >Dosis Rekomendasi & Aturan Pakai (Opsional)</label
+            >
+            <input
+              id="medDosageInput"
+              type="text"
+              placeholder="Contoh: Dewasa 1 kaplet 3x sehari sesudah makan"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
+            />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -1060,92 +1056,6 @@
       </div>
     </div>
 
-    <!-- ================= MODAL EVALUASI SKETSA & PANDUAN DEPLOY DATABASE ================= -->
-    <div
-      id="guideModal"
-      class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
-    >
-      <div
-        class="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden"
-      >
-        <div
-          class="px-6 py-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between"
-        >
-          <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
-              Evaluasi Diagram Alur & Panduan Deploy Database
-            </h3>
-            <p class="text-xs text-slate-500">
-              Koreksi arsitektur berdasarkan sketsa Anda & langkah menuju server
-              produksi
-            </p>
-          </div>
-          <button
-            onclick="closeGuideModal()"
-            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
-          </button>
-        </div>
-
-        <div
-          class="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 leading-relaxed"
-        >
-          <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <h4 class="font-extrabold text-amber-900 text-base mb-2">
-              1. Koreksi & Penyempurnaan Diagram Alur (Flowchart)
-            </h4>
-            <ul
-              class="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-amber-950"
-            >
-              <li>
-                <strong>Relasi Gedung dengan Tambah/Kurangi Obat:</strong> Pada
-                flowchart awal, jalur
-                <em>"Menambah/Mengurangi Obat"</em> terpisah dari
-                <em>"Pilih Gedung"</em>. Pada kode ini, alurnya disempurnakan
-                menjadi:
-                <strong
-                  >Pilih Gedung &rarr; Lihat Stok Gedung &rarr; Jika Login Admin
-                  Memiliki Hak Akses di Gedung Tersebut, lakukan Tambah/Kurang
-                  Stok atau Tambah Obat Baru &rarr; Simpan ke Database
-                  Supabase</strong
-                >.
-              </li>
-              <li>
-                <strong>Pembagian Hak Akses 11 Akun:</strong> 2 Akun Admin Utama
-                dapat mengelola seluruh 9 gedung, sedangkan 9 Akun Pengurus
-                Gedung hanya dapat mengelola dan menambah obat baru di gedungnya
-                masing-masing.
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div
-          class="px-6 py-3.5 bg-slate-100 border-t border-slate-200 flex justify-end"
-        >
-          <button
-            onclick="closeGuideModal()"
-            class="px-5 py-2 rounded-xl bg-[#456997] text-white font-bold text-xs sm:text-sm"
-          >
-            Mengerti, Tutup Panduan
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
       const SUPABASE_URL = "https://qdcsbtjjoholqucaqpos.supabase.co";
@@ -1166,7 +1076,64 @@
         { id: "GEDUNG SYLVAEDU2", label: "GEDUNG SYLVAEDU2" },
       ];
 
-      // Daftar 11 Akun (2 Admin Utama + 9 Pengurus Gedung)
+      // Kamus Informasi Lengkap Obat (Dosis Rekomendasi & Peringatan Medis)
+      const MEDICINE_DETAILS = {
+        "Paracetamol 500mg": {
+          dosage:
+            "Dewasa: 1 kaplet (500 mg) 3–4 kali sehari setiap 4–6 jam bila demam atau nyeri. Maksimal 8 kaplet (4000 mg) dalam 24 jam. Diminum sebelum atau sesudah makan.",
+          warning:
+            "Hentikan penggunaan jika demam tidak turun setelah 3 hari atau nyeri tidak membaik setelah 5 hari. Hindari konsumsi melebihi dosis anjuran.",
+        },
+        "Promag / Antasida Doen": {
+          dosage:
+            "Dewasa: 1–2 tablet dikunyah hingga halus, diminum 3–4 kali sehari. Sebaiknya dikonsumsi 1 jam sebelum makan atau 2 jam setelah makan dan menjelang tidur.",
+          warning:
+            "Tablet harus dikunyah terlebih dahulu sebelum ditelan agar bekerja optimal. Beri jeda 1–2 jam jika sedang mengonsumsi obat lain.",
+        },
+        "Diapet / Entrostop": {
+          dosage:
+            "Dewasa: 2 kapsul/tablet setiap selesai buang air besar cair (diare), maksimal 8–12 kapsul/tablet dalam 24 jam.",
+          warning:
+            "Pastikan tetap mencukupi kebutuhan cairan tubuh (minum air putih atau Oralit) untuk mencegah dehidrasi. Segera ke fasilitas kesehatan jika diare disertai demam tinggi.",
+        },
+        "OBH Combi / Obat Batuk": {
+          dosage: "Dewasa: 3 kali sehari 1 sendok takar (15 ml) sesudah makan.",
+          warning:
+            "Dapat menyebabkan kantuk. Hindari mengendarai kendaraan bermotor atau mengoperasikan mesin setelah meminum obat ini.",
+        },
+        "Betadine Antiseptik 30ml": {
+          dosage:
+            "Obat Luar: Bersihkan luka terlebih dahulu, lalu teteskan atau oleskan Betadine secukupnya pada permukaan luka 1–2 kali sehari.",
+          warning:
+            "Hanya untuk pemakaian luar pada kulit. Jangan ditelan dan hindari kontak langsung dengan mata.",
+        },
+        "Hansaplast Plester Luka": {
+          dosage:
+            "Pemakaian Luar: Bersihkan dan keringkan kulit di sekitar luka, lalu tempelkan plester tanpa menariknya terlalu kencang. Ganti plester setiap hari atau saat basah/kotor.",
+          warning:
+            "Hentikan pemakaian apabila muncul iritasi atau kemerahan/gatal pada kulit di sekitar area perekat.",
+        },
+        "Minyak Kayu Putih 60ml": {
+          dosage:
+            "Obat Luar: Oleskan secukupnya pada bagian tubuh yang membutuhkan (perut, dada, punggung, atau area gigitan serangga) sesuai kebutuhan.",
+          warning:
+            "Hanya untuk pemakaian luar. Hindari area mata, luka terbuka, dan selaput lendir.",
+        },
+        "CTM (Chlorpheniramine)": {
+          dosage:
+            "Dewasa: 1 tablet (4 mg) 3–4 kali sehari sesudah makan (maksimal 6 tablet sehari).",
+          warning:
+            "Menyebabkan rasa kantuk yang kuat. Jangan beraktivitas yang membutuhkan konsentrasi tinggi setelah mengonsumsi obat ini.",
+        },
+        "Oralit Sachet 200ml": {
+          dosage:
+            "Larutkan 1 sachet Oralit ke dalam 1 gelas (200 ml) air matang. Minum 1–2 gelas setiap kali selesai buang air besar cair atau muntah.",
+          warning:
+            "Gunakan air matang suhu ruang (bukan air mendidih). Larutan yang sudah dibuat sebaiknya dihabiskan dalam waktu maksimal 24 jam.",
+        },
+      };
+
+      // Daftar 11 Akun (2 Admin Utama + 9 Pengurus Gedung) - TIDAK ADA PERUBAHAN
       const ACCOUNTS = [
         {
           username: "admin_utama1",
@@ -1251,12 +1218,11 @@
 
       // State Aplikasi
       let selectedBuilding = "GEDUNG A1";
-      let currentUser = null; // Menyimpan objek akun yang sedang login
+      let currentUser = null;
       let inventoryData = {};
       let activityLogs = [];
       let pendingConfirmCallback = null;
 
-      // Cek apakah akun yang sedang login berhak mengelola gedung tertentu
       function canManageBuilding(buildingId) {
         if (!currentUser) return false;
         if (currentUser.role === "superadmin") return true;
@@ -1378,7 +1344,6 @@
             );
             inventoryData = generateDefaultInventory();
           } else if (data && data.length === 0) {
-            // Jika tabel Supabase masih kosong (0 baris), isi otomatis dengan data awal
             const defaultData = generateDefaultInventory();
             const seedRows = [];
             Object.keys(defaultData).forEach((bId) => {
@@ -1420,7 +1385,6 @@
           inventoryData = generateDefaultInventory();
         }
 
-        // Muat log riwayat dari localStorage
         try {
           const savedLogs = localStorage.getItem(LOG_STORAGE_KEY);
           if (savedLogs) {
@@ -1498,7 +1462,6 @@
           .join("");
       }
 
-      // Render Deretan Tombol Gedung
       function renderBuildingTabs() {
         const container = document.getElementById("buildingTabs");
         container.innerHTML = BUILDINGS.map((b) => {
@@ -1537,7 +1500,6 @@
         updateSummaryStats();
       }
 
-      // Update Ringkasan Statistik di Hero Banner
       function updateSummaryStats() {
         const items = inventoryData[selectedBuilding] || [];
         const lowOrEmpty = items.filter((i) => i.stock <= 5).length;
@@ -1554,7 +1516,7 @@
           `Menambahkan data obat ke ${selectedBuilding}`;
       }
 
-      // Render Tabel Stok Obat
+      // Render Tabel Stok Obat (Hanya Kolom Nama & Stok)
       function renderMedicineTable() {
         const tbody = document.getElementById("medicineTableBody");
         const emptyState = document.getElementById("emptyState");
@@ -1576,7 +1538,7 @@
         const filtered = rawList.filter((item) => {
           const matchSearch =
             item.name.toLowerCase().includes(searchQuery) ||
-            item.usage.toLowerCase().includes(searchQuery) ||
+            (item.usage || "").toLowerCase().includes(searchQuery) ||
             item.category.toLowerCase().includes(searchQuery);
           if (!matchSearch) return false;
 
@@ -1646,13 +1608,24 @@
             return `
                     <tr class="hover:bg-slate-50/90 transition">
                         <td class="py-4 px-5 align-middle">
-                            <div class="font-bold text-slate-900 text-sm sm:text-base">${escapeHtml(item.name)}</div>
-                            <span class="inline-block mt-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                                ${escapeHtml(item.category)}
-                            </span>
-                        </td>
-                        <td class="py-4 px-5 align-middle text-slate-700 text-xs sm:text-sm leading-relaxed">
-                            ${escapeHtml(item.usage)}
+                            <button
+                                type="button"
+                                onclick="openMedicineDetail('${item.id}')"
+                                class="group text-left focus:outline-none"
+                            >
+                                <div class="font-bold text-[#2c88b5] group-hover:text-[#1a668d] group-hover:underline text-sm sm:text-base flex items-center gap-1.5 transition">
+                                    <span>${escapeHtml(item.name)}</span>
+                                    <svg class="w-4 h-4 text-slate-400 group-hover:text-[#2c88b5] transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </button>
+                            <div class="flex flex-wrap items-center gap-2 mt-1">
+                                <span class="inline-block text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                    ${escapeHtml(item.category)}
+                                </span>
+                                <span class="text-[11px] text-slate-400">Klik nama untuk detail & dosis</span>
+                            </div>
                         </td>
                         <td class="py-4 px-5 align-middle text-center">
                             <div class="flex flex-col items-center justify-center gap-1">
@@ -1667,6 +1640,57 @@
                 `;
           })
           .join("");
+      }
+
+      // Fungsi Membuka & Menutup Modal Detail Deskripsi Obat
+      function openMedicineDetail(medId) {
+        const list = inventoryData[selectedBuilding] || [];
+        const item = list.find((m) => String(m.id) === String(medId));
+        if (!item) return;
+
+        const rawUsage = item.usage || "-";
+        const parts = rawUsage.split(" || Dosis: ");
+        const cleanUsage = parts[0];
+        const customDosage = parts[1] || "";
+
+        const detailInfo = MEDICINE_DETAILS[item.name] || {};
+        const dosageText =
+          customDosage ||
+          detailInfo.dosage ||
+          "Gunakan sesuai petunjuk pada kemasan obat atau anjuran petugas kesehatan asrama.";
+        const warningText =
+          detailInfo.warning ||
+          "Simpan di tempat sejuk dan kering. Bila keluhan berlanjut, segera hubungi pengurus kesehatan asrama atau klinik terdekat.";
+
+        document.getElementById("detailMedName").textContent = item.name;
+        document.getElementById("detailMedCategory").textContent =
+          item.category;
+        document.getElementById("detailMedBuilding").textContent =
+          `Lokasi Stok: ${selectedBuilding}`;
+        document.getElementById("detailMedUsage").textContent = cleanUsage;
+        document.getElementById("detailMedDosage").textContent = dosageText;
+        document.getElementById("detailMedWarning").textContent = warningText;
+        document.getElementById("detailMedStockCount").textContent =
+          `${item.stock} ${item.unit}`;
+
+        const badgeEl = document.getElementById("detailMedStockBadge");
+        if (item.stock === 0) {
+          badgeEl.innerHTML = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 border border-rose-200">Stok Habis</span>`;
+        } else if (item.stock <= 5) {
+          badgeEl.innerHTML = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Stok Menipis</span>`;
+        } else {
+          badgeEl.innerHTML = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Tersedia</span>`;
+        }
+
+        const modal = document.getElementById("medicineDetailModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function closeMedicineDetailModal() {
+        const modal = document.getElementById("medicineDetailModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
       }
 
       // Fungsi Menambah / Mengurangi Stok Obat
@@ -1750,15 +1774,15 @@
         );
       }
 
-      // Fungsi Tambah Obat Baru (Diizinkan untuk Admin Utama & Pengurus Gedung di Gedung Sendiri)
+      // Fungsi Tambah Obat Baru
       function openAddModal() {
         if (!canManageBuilding(selectedBuilding)) return;
         document.getElementById("medNameInput").value = "";
         document.getElementById("medUsageInput").value = "";
+        document.getElementById("medDosageInput").value = "";
         document.getElementById("medStockInput").value = "10";
         document.getElementById("applyAllBuildings").checked = false;
 
-        // Sembunyikan opsi "Tambahkan ke seluruh 9 gedung" jika bukan Superadmin
         const applyAllWrapper = document.getElementById("applyAllWrapper");
         if (currentUser && currentUser.role === "superadmin") {
           applyAllWrapper.classList.remove("hidden");
@@ -1784,7 +1808,14 @@
 
         const name = document.getElementById("medNameInput").value.trim();
         const category = document.getElementById("medCategoryInput").value;
-        const usage = document.getElementById("medUsageInput").value.trim();
+        const rawUsage = document.getElementById("medUsageInput").value.trim();
+        const rawDosage = document
+          .getElementById("medDosageInput")
+          .value.trim();
+        const usage = rawDosage
+          ? `${rawUsage} || Dosis: ${rawDosage}`
+          : rawUsage;
+
         const stock = Math.max(
           0,
           parseInt(document.getElementById("medStockInput").value, 10) || 0,
@@ -1794,7 +1825,7 @@
           currentUser.role === "superadmin" &&
           document.getElementById("applyAllBuildings").checked;
 
-        if (!name || !usage) {
+        if (!name || !rawUsage) {
           showToast("Mohon lengkapi nama obat dan kegunaannya.", "error");
           return;
         }
@@ -1874,12 +1905,6 @@
         modal.classList.remove("flex");
       }
 
-      function fillAccount(user, pass) {
-        document.getElementById("usernameInput").value = user;
-        document.getElementById("passwordInput").value = pass;
-        document.getElementById("loginErrorBox").classList.add("hidden");
-      }
-
       function submitLogin(event) {
         event.preventDefault();
         const user = document.getElementById("usernameInput").value.trim();
@@ -1891,7 +1916,6 @@
 
         if (matchedAccount) {
           currentUser = matchedAccount;
-          // Jika yang login adalah pengurus gedung, langsung arahkan ke tab gedungnya
           if (currentUser.role === "building_admin") {
             selectedBuilding = currentUser.building;
           }
@@ -1927,7 +1951,6 @@
             "w-2 h-2 rounded-full bg-emerald-500 animate-ping";
           roleText.textContent = currentUser.label;
 
-          // Tombol Reset Database hanya untuk 2 Admin Utama
           if (currentUser.role === "superadmin") {
             resetDataBtn.classList.remove("hidden");
             resetDataBtn.classList.add("flex");
@@ -1936,7 +1959,6 @@
             resetDataBtn.classList.remove("flex");
           }
 
-          // Tombol + Obat Baru dan Indikator Edit mengikuti hak akses gedung yang sedang dibuka
           if (canEditActive) {
             addMedicineBtn.classList.remove("hidden");
             addMedicineBtn.classList.add("flex");
@@ -2031,18 +2053,6 @@
           }
           closeConfirmModal();
         });
-
-      function openGuideModal() {
-        const modal = document.getElementById("guideModal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-      }
-
-      function closeGuideModal() {
-        const modal = document.getElementById("guideModal");
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
 
       function showToast(message, type = "info") {
         const container = document.getElementById("toastContainer");
