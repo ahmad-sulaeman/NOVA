@@ -6,7 +6,11 @@
     <title>NOVA — Sistem Stok Obat Asrama</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase JS v2 (Locked Version) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
+      crossorigin="anonymous"
+    ></script>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -344,7 +348,7 @@
               <div
                 class="absolute bottom-3 right-5 text-[11px] font-semibold text-slate-500 bg-white/80 px-2.5 py-1 rounded-full border border-slate-200"
               >
-                NOVA v1.0.0
+                NOVA v1.1.0 (Secured)
               </div>
             </div>
           </div>
@@ -428,6 +432,7 @@
               <input
                 type="text"
                 id="searchInput"
+                maxlength="100"
                 oninput="renderMedicineTable()"
                 placeholder="Cari nama obat / keluhan..."
                 class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white text-slate-800 placeholder-slate-400 text-sm font-medium border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
@@ -492,7 +497,7 @@
           </div>
         </div>
 
-        <!-- Tabel Stok Obat (Hanya Kolom Daftar Obat & Stok) -->
+        <!-- Tabel Stok Obat -->
         <div
           class="bg-white/95 rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden"
         >
@@ -604,8 +609,9 @@
             </h4>
           </div>
           <button
+            id="clearLogBtn"
             onclick="clearHistoryLog()"
-            class="text-xs text-slate-400 hover:text-slate-600 font-medium"
+            class="hidden text-xs text-slate-400 hover:text-slate-600 font-medium"
           >
             Bersihkan Riwayat
           </button>
@@ -685,7 +691,6 @@
         </div>
 
         <div class="space-y-4 my-5 text-sm">
-          <!-- Indikasi & Kegunaan -->
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
             <h4
               class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5"
@@ -698,7 +703,6 @@
             ></p>
           </div>
 
-          <!-- Dosis Rekomendasi & Aturan Pakai -->
           <div class="bg-sky-50/70 rounded-2xl p-4 border border-sky-200/80">
             <h4
               class="text-xs font-extrabold uppercase tracking-wider text-sky-800 mb-1.5"
@@ -711,7 +715,6 @@
             ></p>
           </div>
 
-          <!-- Efek Samping / Perhatian -->
           <div
             class="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/80"
           >
@@ -822,6 +825,8 @@
               id="usernameInput"
               type="text"
               required
+              maxlength="60"
+              autocomplete="username"
               placeholder="Masukkan username"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#456997]"
             />
@@ -836,6 +841,8 @@
               id="passwordInput"
               type="password"
               required
+              maxlength="100"
+              autocomplete="current-password"
               placeholder="Masukkan password"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#456997]"
             />
@@ -849,6 +856,7 @@
               Batal
             </button>
             <button
+              id="loginSubmitBtn"
               type="submit"
               class="px-6 py-2.5 rounded-xl bg-[#456997] hover:bg-[#36557d] text-white font-bold text-sm shadow-md"
             >
@@ -907,6 +915,7 @@
                 id="medNameInput"
                 type="text"
                 required
+                maxlength="100"
                 placeholder="Contoh: Paracetamol 500mg"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
               />
@@ -937,6 +946,7 @@
               id="medUsageInput"
               rows="2"
               required
+              maxlength="400"
               placeholder="Contoh: Meredakan demam, sakit kepala, dan nyeri ringan."
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
             ></textarea>
@@ -949,6 +959,7 @@
             <input
               id="medDosageInput"
               type="text"
+              maxlength="250"
               placeholder="Contoh: Dewasa 1 kaplet 3x sehari sesudah makan"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
             />
@@ -964,6 +975,7 @@
                 id="medStockInput"
                 type="number"
                 min="0"
+                max="9999"
                 value="10"
                 required
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c88b5]"
@@ -1056,12 +1068,14 @@
       </div>
     </div>
 
-    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <!-- ================= JAVASCRIPT LOGIC (SECURED) ================= -->
     <script>
       const SUPABASE_URL = "https://qdcsbtjjoholqucaqpos.supabase.co";
       const SUPABASE_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkY3NidGpqb2hvbHF1Y2FxcG9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTk5NjYsImV4cCI6MjEwOTE5NTk2Nn0.kgolAM-7NW6Zvf-QhCpx4CAPVIKzVtoR9yCU53wenvQ";
       const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const AUTH_EMAIL_DOMAIN = "@nova.asrama.id";
 
       // Daftar 9 Gedung Asrama
       const BUILDINGS = [
@@ -1076,7 +1090,7 @@
         { id: "GEDUNG SYLVAEDU2", label: "GEDUNG SYLVAEDU2" },
       ];
 
-      // Kamus Informasi Lengkap Obat (Dosis Rekomendasi & Peringatan Medis)
+      // Kamus Informasi Lengkap Obat
       const MEDICINE_DETAILS = {
         "Paracetamol 500mg": {
           dosage:
@@ -1133,87 +1147,6 @@
         },
       };
 
-      // Daftar 11 Akun (2 Admin Utama + 9 Pengurus Gedung) - TIDAK ADA PERUBAHAN
-      const ACCOUNTS = [
-        {
-          username: "admin_utama1",
-          password: "pusat123",
-          role: "superadmin",
-          building: "ALL",
-          label: "Admin Utama 1",
-        },
-        {
-          username: "admin_utama2",
-          password: "pusat123",
-          role: "superadmin",
-          building: "ALL",
-          label: "Admin Utama 2",
-        },
-        {
-          username: "admin_a1",
-          password: "gedunga1",
-          role: "building_admin",
-          building: "GEDUNG A1",
-          label: "Pengurus Gedung A1",
-        },
-        {
-          username: "admin_a2",
-          password: "gedunga2",
-          role: "building_admin",
-          building: "GEDUNG A2",
-          label: "Pengurus Gedung A2",
-        },
-        {
-          username: "admin_a3",
-          password: "gedunga3",
-          role: "building_admin",
-          building: "GEDUNG A3",
-          label: "Pengurus Gedung A3",
-        },
-        {
-          username: "admin_a4",
-          password: "gedunga4",
-          role: "building_admin",
-          building: "GEDUNG A4",
-          label: "Pengurus Gedung A4",
-        },
-        {
-          username: "admin_a5",
-          password: "gedunga5",
-          role: "building_admin",
-          building: "GEDUNG A5",
-          label: "Pengurus Gedung A5",
-        },
-        {
-          username: "admin_c1",
-          password: "gedungc1",
-          role: "building_admin",
-          building: "GEDUNG C1",
-          label: "Pengurus Gedung C1",
-        },
-        {
-          username: "admin_c3",
-          password: "gedungc3",
-          role: "building_admin",
-          building: "GEDUNG C3",
-          label: "Pengurus Gedung C3",
-        },
-        {
-          username: "admin_sylva1",
-          password: "sylva1",
-          role: "building_admin",
-          building: "GEDUNG SYLVAEDU1",
-          label: "Pengurus SylvaEdu 1",
-        },
-        {
-          username: "admin_sylva2",
-          password: "sylva2",
-          role: "building_admin",
-          building: "GEDUNG SYLVAEDU2",
-          label: "Pengurus SylvaEdu 2",
-        },
-      ];
-
       const LOG_STORAGE_KEY = "NOVA_ASRAMA_LOGS_V1";
 
       // State Aplikasi
@@ -1222,6 +1155,21 @@
       let inventoryData = {};
       let activityLogs = [];
       let pendingConfirmCallback = null;
+      let isAdjustingStock = false;
+
+      // Ekstrak profil pengurus dari sesi JWT Supabase
+      function extractUserFromSession(session) {
+        if (!session || !session.user) return null;
+        const appMeta = session.user.app_metadata || {};
+        const userMeta = session.user.user_metadata || {};
+        const emailPrefix = (session.user.email || "").split("@")[0];
+        return {
+          username: appMeta.username || userMeta.username || emailPrefix,
+          role: appMeta.role || "building_admin",
+          building: appMeta.building || "",
+          label: appMeta.label || userMeta.label || emailPrefix,
+        };
+      }
 
       function canManageBuilding(buildingId) {
         if (!currentUser) return false;
@@ -1229,7 +1177,6 @@
         return currentUser.building === buildingId;
       }
 
-      // Data Awal (Default Seed) untuk Setiap Gedung Asrama
       function generateDefaultInventory() {
         const baseTemplates = [
           {
@@ -1312,7 +1259,7 @@
             if (idx === 7 && bIdx % 2 === 0) variedStock = 0;
             if (variedStock < 0) variedStock = 0;
             return {
-              id: `${b.id.replace(/\s+/g, "_")}_MED_${idx + 1}`,
+              id: idx + 1 + bIdx * 100,
               name: item.name,
               category: item.category,
               usage: item.usage,
@@ -1324,11 +1271,23 @@
         return initialData;
       }
 
-      // Mengambil data stok obat dari Supabase
+      // Mengambil sesi login & data stok obat dari Supabase
       async function loadData() {
         BUILDINGS.forEach((b) => {
           inventoryData[b.id] = [];
         });
+
+        try {
+          const { data: sessionData } = await db.auth.getSession();
+          if (sessionData && sessionData.session) {
+            currentUser = extractUserFromSession(sessionData.session);
+            if (currentUser && currentUser.role === "building_admin") {
+              selectedBuilding = currentUser.building;
+            }
+          }
+        } catch (authErr) {
+          console.error("Gagal memeriksa sesi autentikasi:", authErr);
+        }
 
         try {
           const { data, error } = await db
@@ -1343,36 +1302,6 @@
               "error",
             );
             inventoryData = generateDefaultInventory();
-          } else if (data && data.length === 0) {
-            const defaultData = generateDefaultInventory();
-            const seedRows = [];
-            Object.keys(defaultData).forEach((bId) => {
-              defaultData[bId].forEach((item) => {
-                seedRows.push({
-                  building_id: bId,
-                  name: item.name,
-                  category: item.category,
-                  usage: item.usage,
-                  stock: item.stock,
-                  unit: item.unit,
-                });
-              });
-            });
-
-            const { data: inserted, error: seedErr } = await db
-              .from("medicine_stocks")
-              .insert(seedRows)
-              .select();
-
-            if (!seedErr && inserted) {
-              inserted.forEach((item) => {
-                if (!inventoryData[item.building_id])
-                  inventoryData[item.building_id] = [];
-                inventoryData[item.building_id].push(item);
-              });
-            } else {
-              inventoryData = defaultData;
-            }
           } else if (data) {
             data.forEach((item) => {
               if (!inventoryData[item.building_id])
@@ -1440,8 +1369,12 @@
       }
 
       function clearHistoryLog() {
+        if (!currentUser) return;
         activityLogs = [
-          { time: getCurrentTimeStr(), text: "Riwayat aktivitas dibersihkan." },
+          {
+            time: getCurrentTimeStr(),
+            text: `Riwayat aktivitas dibersihkan oleh ${currentUser.label}.`,
+          },
         ];
         saveLogs();
         renderActivityLogs();
@@ -1454,7 +1387,7 @@
           .map(
             (log) => `
                 <div class="flex items-start gap-2 py-1 border-b border-slate-100 last:border-none">
-                    <span class="font-mono text-[11px] text-slate-400 shrink-0">[${log.time}]</span>
+                    <span class="font-mono text-[11px] text-slate-400 shrink-0">[${escapeHtml(log.time)}]</span>
                     <span class="text-slate-700">${escapeHtml(log.text)}</span>
                 </div>
             `,
@@ -1464,7 +1397,7 @@
 
       function renderBuildingTabs() {
         const container = document.getElementById("buildingTabs");
-        container.innerHTML = BUILDINGS.map((b) => {
+        container.innerHTML = BUILDINGS.map((b, idx) => {
           const isActive = b.id === selectedBuilding;
           const buildingItems = inventoryData[b.id] || [];
           const emptyCount = buildingItems.filter((m) => m.stock === 0).length;
@@ -1472,14 +1405,14 @@
 
           return `
                     <button
-                        onclick="selectBuilding('${b.id}')"
+                        onclick="selectBuildingByIndex(${idx})"
                         class="relative px-3 py-3 rounded-2xl font-extrabold text-xs sm:text-[13px] tracking-wide transition-all duration-200 flex flex-col items-center justify-center text-center min-h-[54px] select-none ${
                           isActive
                             ? "bg-[#1a668d] text-white shadow-lg ring-2 ring-offset-2 ring-[#2c88b5] -translate-y-0.5"
                             : "bg-[#2c88b5] hover:bg-[#23749c] text-white/95 shadow-sm hover:shadow"
                         }"
                     >
-                        <span class="leading-tight">${b.label}</span>
+                        <span class="leading-tight">${escapeHtml(b.label)}</span>
                         ${
                           hasAccess
                             ? `<span class="mt-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-400 text-slate-900">Akses Edit</span>`
@@ -1492,8 +1425,10 @@
         }).join("");
       }
 
-      function selectBuilding(buildingId) {
-        selectedBuilding = buildingId;
+      function selectBuildingByIndex(index) {
+        const target = BUILDINGS[index];
+        if (!target) return;
+        selectedBuilding = target.id;
         updateAuthUI();
         renderBuildingTabs();
         renderMedicineTable();
@@ -1516,7 +1451,7 @@
           `Menambahkan data obat ke ${selectedBuilding}`;
       }
 
-      // Render Tabel Stok Obat (Hanya Kolom Nama & Stok)
+      // Render Tabel Stok Obat (Bebas DOM-XSS pada atribut onclick)
       function renderMedicineTable() {
         const tbody = document.getElementById("medicineTableBody");
         const emptyState = document.getElementById("emptyState");
@@ -1558,6 +1493,7 @@
 
         tbody.innerHTML = filtered
           .map((item) => {
+            const safeId = Number(item.id);
             let badgeHtml = "";
             if (item.stock === 0) {
               badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">Habis</span>`;
@@ -1573,7 +1509,7 @@
                     <td class="py-4 px-5 text-center align-middle">
                         <div class="inline-flex items-center justify-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                             <button
-                                onclick="adjustStock('${item.id}', -1)"
+                                onclick="adjustStock(${safeId}, -1)"
                                 ${isZero ? "disabled" : ""}
                                 title="${isZero ? "Stok sudah 0 (tidak bisa dikurangi)" : "Kurangi 1 stok"}"
                                 class="w-8 h-8 rounded-lg font-extrabold text-sm flex items-center justify-center transition ${
@@ -1585,14 +1521,14 @@
                                 -1
                             </button>
                             <button
-                                onclick="adjustStock('${item.id}', 1)"
+                                onclick="adjustStock(${safeId}, 1)"
                                 title="Tambah 1 stok"
                                 class="w-8 h-8 rounded-lg bg-[#2c88b5] hover:bg-[#226b8f] text-white font-extrabold text-sm flex items-center justify-center shadow-2xs active:scale-95 transition"
                             >
                                 +1
                             </button>
                             <button
-                                onclick="confirmDeleteMedicine('${item.id}', '${escapeHtml(item.name)}')"
+                                onclick="confirmDeleteMedicine(${safeId})"
                                 title="Hapus obat dari gedung ini"
                                 class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center border border-rose-200 transition active:scale-95 ml-1"
                             >
@@ -1610,7 +1546,7 @@
                         <td class="py-4 px-5 align-middle">
                             <button
                                 type="button"
-                                onclick="openMedicineDetail('${item.id}')"
+                                onclick="openMedicineDetail(${safeId})"
                                 class="group text-left focus:outline-none"
                             >
                                 <div class="font-bold text-[#2c88b5] group-hover:text-[#1a668d] group-hover:underline text-sm sm:text-base flex items-center gap-1.5 transition">
@@ -1630,7 +1566,7 @@
                         <td class="py-4 px-5 align-middle text-center">
                             <div class="flex flex-col items-center justify-center gap-1">
                                 <div class="text-base sm:text-lg font-extrabold ${item.stock === 0 ? "text-rose-600" : "text-slate-900"}">
-                                    ${item.stock} <span class="text-xs font-semibold text-slate-500">${escapeHtml(item.unit)}</span>
+                                    ${Number(item.stock)} <span class="text-xs font-semibold text-slate-500">${escapeHtml(item.unit)}</span>
                                 </div>
                                 ${badgeHtml}
                             </div>
@@ -1645,7 +1581,7 @@
       // Fungsi Membuka & Menutup Modal Detail Deskripsi Obat
       function openMedicineDetail(medId) {
         const list = inventoryData[selectedBuilding] || [];
-        const item = list.find((m) => String(m.id) === String(medId));
+        const item = list.find((m) => Number(m.id) === Number(medId));
         if (!item) return;
 
         const rawUsage = item.usage || "-";
@@ -1693,8 +1629,9 @@
         modal.classList.remove("flex");
       }
 
-      // Fungsi Menambah / Mengurangi Stok Obat
+      // Fungsi Menambah / Mengurangi Stok Obat (Atomic RPC + Lock)
       async function adjustStock(medId, delta) {
+        if (isAdjustingStock) return;
         if (!canManageBuilding(selectedBuilding)) {
           showToast(
             "Anda tidak memiliki izin untuk mengubah stok di gedung ini.",
@@ -1704,7 +1641,7 @@
         }
 
         const list = inventoryData[selectedBuilding] || [];
-        const target = list.find((m) => String(m.id) === String(medId));
+        const target = list.find((m) => Number(m.id) === Number(medId));
         if (!target) return;
 
         if (target.stock + delta < 0) {
@@ -1715,36 +1652,55 @@
           return;
         }
 
-        const newStock = target.stock + delta;
-        const { error } = await db
-          .from("medicine_stocks")
-          .update({ stock: newStock })
-          .eq("id", target.id);
+        isAdjustingStock = true;
+        try {
+          const { data: updatedStock, error } = await db.rpc(
+            "adjust_medicine_stock",
+            {
+              row_id: Number(target.id),
+              delta: Number(delta),
+            },
+          );
 
-        if (error) {
-          showToast("Gagal memperbarui stok ke database.", "error");
-          return;
+          if (error) {
+            showToast(
+              "Gagal memperbarui stok: pastikan Anda memiliki akses.",
+              "error",
+            );
+            return;
+          }
+
+          target.stock =
+            typeof updatedStock === "number"
+              ? updatedStock
+              : target.stock + delta;
+
+          renderMedicineTable();
+          renderBuildingTabs();
+          updateSummaryStats();
+
+          const actionWord =
+            delta > 0 ? `ditambah (+${delta})` : `dikurangi (${delta})`;
+          addActivityLog(
+            `[${selectedBuilding}] Stok "${target.name}" ${actionWord} menjadi ${target.stock} ${target.unit} oleh ${currentUser.label}.`,
+          );
+          showToast(
+            `Stok ${target.name} diperbarui menjadi ${target.stock} ${target.unit}`,
+            "success",
+          );
+        } finally {
+          isAdjustingStock = false;
         }
-
-        target.stock = newStock;
-        renderMedicineTable();
-        renderBuildingTabs();
-        updateSummaryStats();
-
-        const actionWord =
-          delta > 0 ? `ditambah (+${delta})` : `dikurangi (${delta})`;
-        addActivityLog(
-          `[${selectedBuilding}] Stok "${target.name}" ${actionWord} menjadi ${target.stock} ${target.unit} oleh ${currentUser.label}.`,
-        );
-        showToast(
-          `Stok ${target.name} diperbarui menjadi ${target.stock} ${target.unit}`,
-          "success",
-        );
       }
 
-      // Fungsi Hapus Obat dengan Modal Konfirmasi
-      function confirmDeleteMedicine(medId, medName) {
+      // Fungsi Hapus Obat dengan Modal Konfirmasi (Bebas XSS)
+      function confirmDeleteMedicine(medId) {
         if (!canManageBuilding(selectedBuilding)) return;
+        const list = inventoryData[selectedBuilding] || [];
+        const target = list.find((m) => Number(m.id) === Number(medId));
+        if (!target) return;
+
+        const medName = target.name;
         openConfirmModal(
           "Hapus Obat dari Gedung",
           `Apakah Anda yakin ingin menghapus "${medName}" dari daftar stok ${selectedBuilding}?`,
@@ -1752,7 +1708,7 @@
             const { error } = await db
               .from("medicine_stocks")
               .delete()
-              .eq("id", medId);
+              .eq("id", Number(medId));
 
             if (error) {
               showToast("Gagal menghapus obat dari database.", "error");
@@ -1761,7 +1717,7 @@
 
             inventoryData[selectedBuilding] = (
               inventoryData[selectedBuilding] || []
-            ).filter((m) => String(m.id) !== String(medId));
+            ).filter((m) => Number(m.id) !== Number(medId));
 
             renderMedicineTable();
             renderBuildingTabs();
@@ -1816,9 +1772,12 @@
           ? `${rawUsage} || Dosis: ${rawDosage}`
           : rawUsage;
 
-        const stock = Math.max(
-          0,
-          parseInt(document.getElementById("medStockInput").value, 10) || 0,
+        const stock = Math.min(
+          9999,
+          Math.max(
+            0,
+            parseInt(document.getElementById("medStockInput").value, 10) || 0,
+          ),
         );
         const unit = document.getElementById("medUnitInput").value;
         const applyAll =
@@ -1874,10 +1833,11 @@
         );
       }
 
-      // ================= SISTEM AUTENTIKASI 11 AKUN =================
-      function handleAuthClick() {
+      // ================= SISTEM AUTENTIKASI SUPABASE AUTH =================
+      async function handleAuthClick() {
         if (currentUser) {
           const prevLabel = currentUser.label;
+          await db.auth.signOut();
           currentUser = null;
           updateAuthUI();
           renderBuildingTabs();
@@ -1905,20 +1865,38 @@
         modal.classList.remove("flex");
       }
 
-      function submitLogin(event) {
+      async function submitLogin(event) {
         event.preventDefault();
-        const user = document.getElementById("usernameInput").value.trim();
+        const rawUser = document
+          .getElementById("usernameInput")
+          .value.trim()
+          .toLowerCase();
         const pass = document.getElementById("passwordInput").value.trim();
+        const submitBtn = document.getElementById("loginSubmitBtn");
 
-        const matchedAccount = ACCOUNTS.find(
-          (acc) => acc.username === user && acc.password === pass,
-        );
+        const email = rawUser.includes("@")
+          ? rawUser
+          : `${rawUser}${AUTH_EMAIL_DOMAIN}`;
 
-        if (matchedAccount) {
-          currentUser = matchedAccount;
-          if (currentUser.role === "building_admin") {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Memverifikasi...";
+
+        try {
+          const { data, error } = await db.auth.signInWithPassword({
+            email,
+            password: pass,
+          });
+
+          if (error || !data.session) {
+            document.getElementById("loginErrorBox").classList.remove("hidden");
+            return;
+          }
+
+          currentUser = extractUserFromSession(data.session);
+          if (currentUser.role === "building_admin" && currentUser.building) {
             selectedBuilding = currentUser.building;
           }
+
           closeLoginModal();
           updateAuthUI();
           renderBuildingTabs();
@@ -1926,8 +1904,9 @@
           updateSummaryStats();
           addActivityLog(`Login berhasil sebagai ${currentUser.label}.`);
           showToast(`Selamat datang, ${currentUser.label}!`, "success");
-        } else {
-          document.getElementById("loginErrorBox").classList.remove("hidden");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Masuk Sekarang";
         }
       }
 
@@ -1936,6 +1915,7 @@
         const authBtnText = document.getElementById("authBtnText");
         const addMedicineBtn = document.getElementById("addMedicineBtn");
         const resetDataBtn = document.getElementById("resetDataBtn");
+        const clearLogBtn = document.getElementById("clearLogBtn");
         const adminModeIndicator =
           document.getElementById("adminModeIndicator");
         const roleDot = document.getElementById("roleDot");
@@ -1950,6 +1930,7 @@
           roleDot.className =
             "w-2 h-2 rounded-full bg-emerald-500 animate-ping";
           roleText.textContent = currentUser.label;
+          clearLogBtn.classList.remove("hidden");
 
           if (currentUser.role === "superadmin") {
             resetDataBtn.classList.remove("hidden");
@@ -1982,6 +1963,7 @@
           addMedicineBtn.classList.remove("flex");
           resetDataBtn.classList.add("hidden");
           resetDataBtn.classList.remove("flex");
+          clearLogBtn.classList.add("hidden");
           adminModeIndicator.classList.add("hidden");
           roleDot.className = "w-2 h-2 rounded-full bg-slate-500";
           roleText.textContent = "Mode Pengunjung";
@@ -2010,7 +1992,16 @@
               });
             });
 
-            await db.from("medicine_stocks").delete().neq("id", 0);
+            const { error: delErr } = await db
+              .from("medicine_stocks")
+              .delete()
+              .neq("id", 0);
+
+            if (delErr) {
+              showToast("Akses ditolak atau gagal mereset database.", "error");
+              return;
+            }
+
             const { error } = await db
               .from("medicine_stocks")
               .insert(allRows)
